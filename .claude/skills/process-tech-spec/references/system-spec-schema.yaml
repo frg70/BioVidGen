@@ -1,0 +1,87 @@
+# System spec. Extends the process-mapper spec; reference its entity and operation names exactly.
+# Unknown: "[specify: ...]". Assumption: prefix "ASSUMPTION: ".
+system:
+  name: string
+  source_process_spec: string          # name/version of the process-mapper spec
+  architecture_style: modular_monolith|services|hybrid
+  goals: [string]
+  non_goals: [string]
+  constraints: [string]
+
+services:
+  - id: SVC1
+    name: string
+    kind: module|service
+    split_reason: string               # required when kind = service
+    owned_entities: [entity_name]
+    operations: [OP_ID]
+    method_classes: [DETERMINISTIC|NLP|LLM|TRAINABLE_ML|HUMAN]
+    identity: string
+    scaling: string
+
+data:
+  - entity: entity_name
+    owner_service: SVC_ID
+    storage: string
+    schema: [{field: string, type: string, constraints: string}]
+    access_pattern_requirements: [string]   # detailed in stage 3
+    consistency: strong|eventual
+    consistency_reason: string
+    retention: string
+    migration: string
+
+interfaces:
+  apis:
+    - {id: string, service: SVC_ID, input: string, output: string, idempotency_key: string, auth_role: string, errors: [string]}
+  events:
+    - {name: string, producer: SVC_ID, consumers: [SVC_ID], schema: string, ordering_key: string, delivery: at_least_once|exactly_once_effective|at_most_once}
+  contract_versioning: string
+
+views:
+  - id: VW1
+    type: screen|report|dashboard|work_queue|read_api
+    audience_roles: [string]
+    purpose: string
+    data: [entity.property]
+    actions: [{label: string, operation: OP_ID}]
+    freshness: string
+    access_constraints: string
+
+method_infrastructure:
+  deterministic: string
+  nlp: string
+  ml: {pipeline: string, retrain_trigger: string, registry: string, serving: batch|online, thresholds: string}
+  llm: {model_criteria: string, prompt_versioning: string, knowledge_sources: [string], tool_scopes: [string], eval_harness: string, fallback: string}
+  human: {queue: string, assignment: string, sla: string, escalation: string}
+  label_capture: string
+
+cross_cutting:
+  security: {authn: string, authz_model: RBAC|ABAC|hybrid, secrets: string, llm_trust_boundary: string, audit_log: string}
+  observability: {metrics: string, logs: string, traces: string, correlation_id: string, alert_routing: string}
+  reliability: {retry_default: string, dead_letter: string, sagas: [string], backup_restore: string}
+  environments: [string]
+
+nfrs:
+  - {name: string, target: string, applies_to: [string], verification: string}
+
+risks:
+  - {risk: string, impact: string, likelihood: string, mitigation: string, owner: string, phase: string}
+
+map_deltas:
+  - {item: string, map_said: string, spec_decides: string, reason: string}
+
+plan:
+  phases:
+    - {id: P1, goal: string, units: [string], exit_criteria: [string], estimate: string}
+  critical_path: [string]
+  workstreams:
+    - {name: string, units: [string], skills: [string], owner: string}
+  definition_of_done: [string]
+
+traceability:
+  - {kpi: string, operations: [OP_ID], service: SVC_ID, views: [VW_ID], tests: [string], monitored_metric: string}
+
+unit_index:
+  - {id: string, kind: operation|service|view, name: string, service: SVC_ID, phase: string, depends_on: [string], notes: string}
+
+open_questions: [string]

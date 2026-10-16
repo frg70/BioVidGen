@@ -1,0 +1,74 @@
+# Machine-readable process spec. Emit one document per analysis.
+# Unknown values: "[specify: ...]". Assumptions: prefix value with "ASSUMPTION: ".
+process:
+  name: string
+  problems: [string]
+  objective: "minimize|maximize <X> subject to <constraints>"
+  target_variable: {name: string, formula: string, unit: string}
+  kpis: [{name: string, formula: string, unit: string, target: string}]
+  as_is_baseline: {cycle_time: string, throughput: string, cost_per_unit: string, defect_rate: string, bottleneck: string}
+  end_to_end_error_budget: {target_yield: string, per_operation_targets: {OP_ID: string}}
+
+entities:
+  - name: string
+    identity: {key: string, type: natural|surrogate, dedup_rule: string}
+    storage: relational|document|graph|timeseries|vector|event_log
+    invariants: [string]
+    interface: [operation_name]
+    properties:
+      - name: string
+        type: string
+        unit: string
+        source_field: string
+        certainty: measured|derived|inferred|assumed
+        confidence: string        # for inferred
+        visibility: public|internal|protected
+        crud: {create: string, read: string, update: string, delete: string}
+    relationships:
+      - {to: string, relation: string, cardinality: "1:1|1:N|N:M", optional: bool, ownership: composition|reference}
+
+operations:
+  - id: OP1
+    name: string
+    input: [entity.property]
+    output: [entity.property]
+    method_class: DETERMINISTIC|NLP|LLM|TRAINABLE_ML|HUMAN
+    why: string
+    knowledge_required: string
+    hybrid_fallback: string
+    migration_signal: string
+    llm_context: {knowledge_sources: [string], tools: [{name: string, scope: string, requires_confirmation: bool}]}  # LLM only
+    properties:
+      encapsulated: bool
+      idempotent: {value: bool, mechanism: string}
+      deterministic: {value: bool, pinned: string}
+      side_effects: [string]
+      atomic: {value: bool, boundary: string}
+      reversible: {value: bool, compensation: string}
+      retry: string
+      ordering: string
+      state: stateless|stateful
+    contract_in: {schema: string, checks: [string], on_violation: string}
+    failure_modes:
+      - {mode: string, effect: string, severity: int, occurrence: int, detection: int, rpn: int, mitigation: string}
+    error_costs: {false_positive: string, false_negative: string}
+    metrics: [{name: string, formula: string, unit: string, target: string}]
+    cost_per_unit: string
+    governance: {sensitive_data: [string], regulation: [string], external_models_allowed: bool}
+    deploy: {mode: batch|event|realtime, interface: string, rollout: string, rollback_trigger: string}
+    label_capture: string
+    telemetry:
+      - {metric: string, frequency: string, instrument: string, alert_threshold: string, alert_owner: string}
+    adapt_rules: [{condition: string, action: string}]
+    owner: {accountable: string, consulted: [string], informed: [string]}
+    actor_identity: string
+
+access_control:
+  model: RBAC|ABAC|hybrid
+  matrix:
+    - {actor: string, resource: entity.property, c: bool, r: bool, u: bool, d: bool, condition: string}
+  separation_of_duties: [string]
+  secrets: {storage: string, rotation: string}
+  audit_log: {events: [string], retention: string}
+
+open_questions: [string]
