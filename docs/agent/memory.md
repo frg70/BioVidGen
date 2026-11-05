@@ -37,7 +37,7 @@ Human track, in parallel. It is on the critical path through ADR-0008.
 | Spike | Question | Result | Date | Changes |
 |---|---|---|---|---|
 | S1 | Gemini Nano: availability, context size, Spanish quality on 10 abstracts, `responseConstraint` support | [pending] | | OP5 adapter; default provider |
-| S2 | Extension → `localhost:11434` (Local Network Access); `OLLAMA_ORIGINS` | [pending] | | Ollama path |
+| S2 | Extension -> local server on 127.0.0.1 (Local Network Access); `OLLAMA_ORIGINS` | **Pass (Chromium 156 headless, partial).** Extension page and service worker reach `http://127.0.0.1:8765` with no host permission: CORS preflight carries `Origin: chrome-extension://<id>`, then GET 200. A public web page fetch fails and the server sees **no request** (blocked before sending). Not yet checked: headed stable Chrome (possible LNA prompt), Ollama `OLLAMA_ORIGINS` | 2026-11-05 | ADR-0010 gate passed; backend must still require token + Origin/Host checks (other local pages/apps can reach it) |
 | S3 | Exact OpenAlex/Crossref retraction, EoC and preprint queries; OpenAlex `pmid` filter; recall/precision on samples | [pending] | | OP12 |
 | S4 | Side-panel call lifetime vs service-worker shutdown | [pending] | | orchestration |
 | S5 | Live free-tier quotas and `json_schema` support: Gemini, Groq, OpenRouter | [pending] | | OP5, Gate 2 headroom |
