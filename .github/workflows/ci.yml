@@ -1,0 +1,81 @@
+# PR gates for the extension (test-catalog gate "PR"). Actions are pinned by commit SHA.
+name: ci
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: extension
+
+jobs:
+  checks:
+    name: lint · typecheck · unit · licences · audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - run: npm ci # SYS-SEC-32: lockfile only
+      - run: npm run lint # boundaries, no-unsanitized, storage.sync ban
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run licenses # SYS-SEC-30
+      - run: npm audit --omit=dev --audit-level=high # SYS-SEC-31 (PR gate: high/critical in runtime deps)
+
+  e2e:
+    name: e2e (headless Chromium, unpacked extension)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: extension/package-lock.json
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e # SYS-SEC-01/02/03, SYS-SEC-22
+      - if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: playwright-report
+          path: extension/playwright-report
+          retention-days: 7
+
+  secrets:
+    name: gitleaks (full history)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: .
+    env:
+      GITLEAKS_VERSION: 8.30.1
+      # sha256 of gitleaks_8.30.1_linux_x64.tar.gz from the release checksums file (checked 2026-11-05)
+      GITLEAKS_SHA256: 551f6fc83ea457d62a0d98237cbad105af8d557003051f41f3e7ca7b3f2470eb
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+      - name: Install gitleaks (pinned, checksum-verified)
+        run: |
+          curl -sSfL -o gitleaks.tar.gz "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          echo "${GITLEAKS_SHA256}  gitleaks.tar.gz" | sha256sum -c -
+          tar -xzf gitleaks.tar.gz gitleaks
+      - name: Scan git history # SYS-SEC-14
+        run: ./gitleaks git --redact --verbose .
