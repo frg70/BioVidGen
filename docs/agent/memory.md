@@ -142,6 +142,7 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: Boundary lint matches module names as path segments: `contracts/summary.ts` reads as the `summary` module. Avoid file names equal to module names.
 - 2026-11-05: Windows `process.cpuUsage()` ticks at ~15.6 ms; useless for a 20 ms budget.
 - 2026-11-05: PowerShell 5.1 `Set-Content -Encoding utf8` and here-strings piped to `git commit -F -` break commit messages (BOM, args). Write the message file with the editor tool, then `git commit -F <file>`.
+- 2026-11-05: Windows: killing `uv run biovidgen` leaves the Python child holding the port; a second start fails to bind while clients keep reaching the old server (old token, so 401). Kill the tree (`taskkill /T`). Packaging (ADR-0010 step 5) needs single-instance detection and a real stop command.
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
