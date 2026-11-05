@@ -67,7 +67,7 @@ Good:
 Bad:
 - **Install friction**, the top adoption risk named in 0006. Students must install and start a background program; school PCs may block it. Chromebooks cannot run it at all.
 - The extension does nothing useful while the backend is off. It needs a clear "start BioVidGen" state.
-- **Packaging.** PyInstaller is GPL-2.0 with a bootloader exception, which conflicts with rule 8 ("no GPL anywhere"). Candidates are Briefcase (BSD) or Nuitka (Apache-2.0). Both are `[verify]` and need a decision.
+- **Packaging.** Rule 8 ("no GPL anywhere") rules out two tools: PyInstaller (GPL-2.0-or-later with a bootloader exception) and Nuitka (AGPL-3.0). Briefcase (BSD-3-Clause) is the only candidate left. All three were checked on PyPI on 2026-11-05.
 - Three operating systems to build and test (Windows, macOS, Linux). CI time grows.
 - **New attack surface:** a local HTTP server. The mitigations in Decision 5 need their own stop-ship tests.
 - Wasted work: about 40% of the SVC0 extension core (Dexie repos, http/limiter, network allowlist e2e) is no longer used by the extension. The backend needs Python equivalents.
@@ -77,14 +77,20 @@ Bad:
 - **Rule 1 (privacy).** Add `127.0.0.1:<backend port>` as an extension egress host. The backend inherits the scholarly/LLM allowlist and the "identifiers only" rule.
 - **Rule 2 (secrets).** API keys move from `chrome.storage.local` to the backend. Storage options: OS keychain via `keyring` (MIT) `[verify]`, or a file readable only by the user. The pairing token is a new secret.
 - **Rule 4 (one writer).** Enforced in Python with `import-linter` contracts (BSD-2) `[verify]`.
-- **Rule 8 (licences).** Add a Python licence gate to CI. Check the packaging tool licences.
+- **Rule 8 (licences).** Add a Python licence gate to CI (pip-licenses, MIT). Two conflicts with the current runtime allowlist (MIT/BSD/Apache-2.0/ISC) need a decision:
+  - `typing-extensions` (PSF-2.0, permissive) is required by pydantic, so FastAPI cannot run without it. Proposal: add PSF-2.0 to the runtime allowlist.
+  - `certifi` (MPL-2.0) comes in with httpx. Proposal: call the scholarly APIs with the stdlib (`urllib.request`, OS certificate store) instead of httpx, which keeps MPL out of the runtime.
+- Versions and licences checked on PyPI on 2026-11-05:
+  - fastapi 0.162.0 (MIT), uvicorn 0.54.0 (BSD-3), starlette 1.10.0 (BSD-3), pydantic 2.14.3 (MIT)
+  - keyring 25.7.0 (MIT), import-linter 2.15 (BSD-2)
+  - pytest 9.2.0 (MIT), hypothesis 6.170.14 (MPL-2.0, dev only), ruff 0.17.3 (MIT)
 
 ## Incremental plan (each step leaves the system working)
 | # | Ships | Verified by | Rollback |
 |---|---|---|---|
 | 0 | Accept this ADR; S2 spike: can the extension reach `127.0.0.1` with a token under current Chrome? | spike notes in memory.md | stay on 0006 |
 | 1 | `backend/` skeleton: FastAPI on 127.0.0.1, `/health`, pairing token, Origin/Host checks, SQLite, structured log with runId, CI (ruff, pytest, licence gate, gitleaks) | security tests: no token → 401; foreign Origin → 403; rebinding Host → 403 | delete the folder |
-| 2 | OP5V in Python, test-first, against the shared vectors (0 false accepts, PROP-01..04, CFG-01 hash guard) | `uv run pytest`; mutation run (mutmut, Apache-2.0 `[verify]`) | TS OP5V branch stays as reference |
+| 2 | OP5V in Python, test-first, against the shared vectors (0 false accepts, PROP-01..04, CFG-01 hash guard) | `uv run pytest`; mutation run (mutmut 3.8.1, BSD-3-Clause, verified 2026-11-05) | TS OP5V branch stays as reference |
 | 3 | Extension client: pairing UI, "backend off" state, POST page text → render | e2e with a stub backend | extension keeps the empty state |
 | 4 | Local web app shell served by the backend | Playwright against 127.0.0.1 | — |
 | 5 | Packaging for one OS (Windows first: team machines) | install on a clean VM | ship as `uv run` for developers only |
