@@ -5,22 +5,17 @@ Last updated: 2026-11-05.
 Update this file at the end of every working session, in the same PR as the work. Keep it short: state, numbers and facts belong here; explanations go in `reasoning.md` or the docs.
 
 ## Status
-- **Phase:** P0 (spikes + walking skeleton), **not started**. No application code exists yet. `app/agent/` holds v1 notes only.
+- **Phase:** P0 (spikes + walking skeleton), **in progress**. SVC0 scaffold done locally on `feat/svc0-scaffold` (all gates green locally; GitHub CI not yet run: branch not pushed). No feature code yet. `app/agent/` holds v1 notes only.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
   - Tech spec v3 + ADR-0008/0009: `docs/process-design/`, `docs/adr/`
   - P0 implementation plans: `docs/impl-plans/`
   - Test catalog: `docs/testing/` (473 tests + 20 KPI tests, 24 stop-ship)
 - **Discovery verdict:** Go with risks, with one amber flag: differentiation against free ChatGPT and free retraction extensions.
-- **Git:** all docs after commit `2da8279` are **uncommitted** on `main`. Commit them on a branch before starting code.
+- **Git:** docs committed on `docs/pipeline-v3` (6 commits, not pushed). `feat/svc0-scaffold` branches from it, so neither is on `main` yet.
 
 ## Next up — P0 order (from `docs/impl-plans/README.md`)
-- [ ] **SVC0 scaffold:**
-  - WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright;
-  - ESLint with boundaries and no-unsanitized;
-  - licence gate, gitleaks, and the network-allowlist e2e;
-  - the `catalog` coverage script;
-  - CI on GitHub Actions.
+- [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. **Open:** push the branch and confirm CI green on GitHub; manual check that clicking the toolbar icon opens the panel in real Chrome.
 - [ ] Spikes S1–S7. Record results in the table below.
 - [ ] OP5V Validate evidence (pure TS; build it first so the guarantee exists before any model).
 - [ ] OP1 Detect → OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
@@ -50,6 +45,15 @@ Human track, in parallel. It is on the critical path through ADR-0008.
 
 ## Verified facts
 Format: fact (date, source).
+- Toolchain pinned 2026-11-05 (npm registry): wxt 0.21.5, preact 11.1.1, dexie 4.4.7 (**Apache-2.0**, not MIT), zod 4.6.7, typescript 6.0.3, vitest 5.1.0, @playwright/test 1.64.1, eslint 10.14.0, typescript-eslint 8.72.1, vite 8.3.6 (transitive). Full list: dependency register §3b.
+- typescript-eslint 8.72 requires TypeScript `<6.1.0`; TS 7.0.2 (latest) cannot be used yet. (2026-11-05, npm peerDependencies)
+- Zod 4 has `z.toJSONSchema()` (draft 2020-12); `zod-to-json-schema` is not needed. (2026-11-05, SVC0-TYPE-02)
+- Playwright loads unpacked MV3 extensions headless with `channel: 'chromium'` (bundled Chromium; Chrome/Edge removed the side-load flags). (2026-11-05, playwright.dev/docs/chrome-extensions + e2e run)
+- `context.on('request')` **does** capture fetches from the extension service worker (`request.serviceWorker()` non-null) and from extension pages. (2026-11-05, e2e canary SYS-SEC-01)
+- WXT: a content script with non-empty `matches` adds them to `host_permissions` even with `registration: 'runtime'`. (2026-11-05, build output)
+- Chrome sidePanel API: Chrome 114+; `setPanelBehavior({openPanelOnActionClick:true})` needs an `action` key. WXT adds the `sidePanel` permission and `side_panel.default_path` automatically. Manifest sets `minimum_chrome_version: 116`. (2026-11-05, developer.chrome.com + build)
+- gitleaks 8.30.1 (MIT) is the latest release; the project is feature-complete (security fixes only). gitleaks-action needs no licence key for personal accounts (frg70 is a User). (2026-11-05, GitHub)
+- Vite 8 honours tsconfig `jsxImportSource: 'preact'`; no Preact Vite plugin needed for the build. (2026-11-05, build output)
 - OpenAlex: single-entity lookup is free and unlimited. List/filter costs $0.10 per 1,000 calls; search costs $1 per 1,000. Budget is $0.10/day keyless and $1/day with a free key. Hard cap 100 req/s. (2026-10-08, help.openalex.org)
 - OpenCitations: 180 req/min/IP. (2026-10-08)
 - Gemini Nano in Chrome needs ≥22 GB free disk, plus either >4 GB VRAM or 16 GB RAM with 4 cores. Desktop Chrome only. (2026-10-08, 🔎 secondary source)
@@ -65,7 +69,7 @@ Format: fact (date, source).
 - Prompt API names and `responseConstraint`
 - the Ollama version that added structured outputs
 - per-provider `response_format: json_schema`
-- licences of Dexie, zod-to-json-schema, eslint-plugin-boundaries, DOMPurify, mustache, Stryker
+- licences of DOMPurify, mustache, Stryker (Dexie = Apache-2.0 and eslint-plugin-boundaries = MIT verified 2026-11-05; zod-to-json-schema not needed)
 - whether `America/Mexico_City` has no DST
 
 ## Decisions (ADR index)
@@ -109,6 +113,14 @@ Format: fact (date, source).
 
 ## Gotchas learned
 Append as you find them, one line each, with the date.
+- 2026-11-05: A float token balance in a token bucket drifts by 1 ms and breaks the rate bound; the limiter uses GCRA (found by SVC0-PROP-02).
+- 2026-11-05: An `AbortSignal` already aborted before `addEventListener` never fires; check `signal.aborted` first (found by SVC0-UNIT-05).
+- 2026-11-05: ESLint `no-restricted-syntax` selectors: regex attributes with `|` failed to parse; use one selector per name.
+- 2026-11-05: Playwright fixtures must destructure (`async ({}, use)`); silence `no-empty-pattern` on those lines.
+- 2026-11-05: Test fixtures that contain `it("ID …")` strings make `npm run catalog` count false coverage; build such strings from parts.
+- 2026-11-05: ESLint config load costs ~8 s cold inside Vitest; lint tests warm up in `beforeAll`.
+- 2026-11-05: Agent tooling: Bash heredocs on this machine collapse `\` and break on apostrophes; write files with the editor tool.
 
 ## Session log
+- 2026-11-05 (b): SVC0 scaffold on `feat/svc0-scaffold`. Numbers: 54 unit/property/integration tests (Vitest ~8 s), 7 e2e (Playwright headless ~35–41 s), catalog SVC0 35/35, SYS-OBS 3/5, SYS-SEC 10/27 (rest belong to later units). Build 218 KB (side panel chunk 200 KB: Dexie + Zod; no budget set yet). Licence gate 340 packages pass. gitleaks: no leaks. Spec deltas D11–D21 recorded in impl-plans README.
 - 2026-11-05: Ran discovery → tech spec v3 → P0 impl plans → test catalog with coverage audit → Mermaid diagrams. Wrote CLAUDE.md, memory.md, reasoning.md, prompts.md. No code yet.

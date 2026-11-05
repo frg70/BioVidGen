@@ -147,6 +147,46 @@ Notation: `[specify]` unknown · `[decide]` a product decision the test exposes 
 | SYS-OBS-04 | diagnostics redaction | copy diagnostics contains env + logs only | PR |
 | SYS-OBS-05 | error codes stable | each documented error code appears in a fixture test | PR |
 
+### 1.9 SVC0 core infrastructure (added 2026-11-05 with the SVC0 scaffold)
+The SVC0 plan (§11 task 1) asked for retry/limiter/messaging/log tests without catalog IDs. These rows give them IDs. System-wide rows above (SYS-OBS-01…03, SYS-SEC-01…03, 12, 20, 22–24, 26, 30) also have SVC0 tests.
+| ID | Variant | Given → Expected | Gate |
+|---|---|---|---|
+| SVC0-PROP-01 | full jitter bounds | any retry index n, any draw → delay ∈ [0, min(8 s, 500 ms·2^n)) | PR |
+| SVC0-PROP-02 | limiter rate bound | any arrival sequence → grants in any window T ≤ capacity + rate·T | PR |
+| SVC0-UNIT-01 | retryable failures | network error, 429, 502, 503, 504 → retried | PR |
+| SVC0-UNIT-02 | non-retryable statuses | 400, 401, 403, 404, 500 → one attempt, `HTTP_ERROR`/`UPSTREAM_ERROR` with status | PR |
+| SVC0-UNIT-03 | attempt cap | 3 attempts total, then stable code (`UPSTREAM_ERROR`, `RATE_LIMITED`, `NETWORK`) | PR |
+| SVC0-UNIT-04 | Retry-After | seconds and HTTP-date honoured; > 30 s → fail fast `RATE_LIMITED` | PR |
+| SVC0-UNIT-05 | timeout and abort | hung attempt → `TIMEOUT` (not retried); caller abort (in flight or before) → `ABORTED` | PR |
+| SVC0-UNIT-06 | backoff timing | fake clock: retry fires exactly after the jittered delay | PR |
+| SVC0-UNIT-07 | limiter per attempt | one token for the request host before every attempt | PR |
+| SVC0-UNIT-08 | limiter wiring | registry rates applied by http | PR |
+| SVC0-UNIT-09 | token bucket | burst = capacity, then 1/rate spacing | PR |
+| SVC0-UNIT-10 | per-host buckets | hosts independent; OpenAlex 10, Crossref 5, Europe PMC 5 rps | PR |
+| SVC0-UNIT-11 | abortable sleep | abort → rejects with the signal reason | PR |
+| SVC0-UNIT-12 | log.op | duration, outcome, errorCode; throw → `UNCAUGHT` + rethrow; AbortError → `aborted` | PR |
+| SVC0-UNIT-13 | log sink failure | sink throws → operation result unaffected | PR |
+| SVC0-UNIT-14 | messaging round trip | valid request → typed reply | PR |
+| SVC0-UNIT-15 | messaging errors | handler `Err` passes through; throw → `HANDLER_ERROR`; no listener → `NO_RECEIVER` | PR |
+| SVC0-UNIT-16 | messaging routing | handlers ignore other message names | PR |
+| SVC0-UNIT-17 | storage persistence | `persist()` requested; absent/denied/throwing → false | PR |
+| SVC0-UNIT-18 | runId | format `run_<uuid>`; 1,000 unique | PR |
+| SVC0-UNIT-19 | flags | typed defaults, overrides; unknown name fails to compile | PR |
+| SVC0-UNIT-20 | i18n `t()` | message returned; missing → key shown (visible gap) | PR |
+| SVC0-UNIT-21 | catalog parser | IDs from table rows; struck-through = retired | PR |
+| SVC0-UNIT-22 | catalog coverage | prefix exact (OP5 ≠ OP5V); ID boundary (SYS-SEC-01 ≠ SYS-SEC-010) | PR |
+| SVC0-SEC-01 | http allowlist | non-allowlisted host, plain http, look-alike host → `HOST_NOT_ALLOWED`, no fetch | PR |
+| SVC0-SEC-02 | messaging sender role | content script → extension-only handler refused (`FORBIDDEN_SENDER`) | PR |
+| SVC0-SEC-03 | allowlist constant | exact host list; http only to `localhost:11434` | PR |
+| SVC0-SEC-04 | runtime imports | `src/` and `entrypoints/` import only runtime dependencies (licence gate covers what ships) | PR |
+| SVC0-INT-01 | Dexie schema v1 | stores, primary keys and indexes equal the SVC0 plan table | PR |
+| SVC0-INT-02 | DB open failure | → `DB_OPEN_FAIL` (memory-only mode), no throw | PR |
+| SVC0-INT-03 | repository access patterns | latest StatusCheck by DOI; latest/recent Summary | PR |
+| SVC0-TYPE-01 | opaque DB handle | module code cannot reach tables without a repository (compile error) | PR |
+| SVC0-TYPE-02 | JSON Schema export | Zod registry → draft 2020-12 JSON Schema for `eval/` | PR |
+| SVC0-E2E-01 | side panel | toolbar opens panel (`openPanelOnActionClick`); empty state in Spanish | PR |
+| SVC0-E2E-02 | options page | renders | PR |
+
 ---
 
 ## 2. Per-operation tests

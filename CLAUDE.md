@@ -29,7 +29,7 @@ When documents conflict, this is the precedence order. Report the conflict; do n
 4. Discovery map
 5. tech-spec v2 and v1
 
-## Target repo layout (P0 creates it)
+## Repo layout (SVC0 created the extension skeleton)
 
 ```
 extension/              WXT + TypeScript + Preact, Chrome MV3
@@ -42,7 +42,9 @@ extension/              WXT + TypeScript + Preact, Chrome MV3
   src/workspace/        SVC5  OP13 templates/, OP14
   src/settings/         SVC6
   entrypoints/          content.ts, sidepanel/, options/, background.ts
-  _locales/es, _locales/en
+  public/_locales/es, public/_locales/en   (WXT copies public/ as-is; delta D19)
+  eslint-rules/         in-repo boundary rule (delta D13)
+  scripts/              licences, catalog coverage, JSON Schema export
   tests/e2e/, fixtures/pages/, fixtures/api/
 eval/                   SVC7  Python 3.12 + uv: gold set, kappa, eval runner (dev-time only)
 docs/runbooks/          one section per unit (Definition of Done)
@@ -52,21 +54,23 @@ docs/runbooks/          one section per unit (Definition of Done)
 
 ## Commands
 
-These don't exist yet; the SVC0 scaffold task creates them. Keep this table accurate when they change.
+Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this table accurate when they change.
 
 | Task | Command |
 |---|---|
-| Install | `cd extension && npm ci` |
-| Dev (load unpacked, hot reload) | `npm run dev` (wxt) |
-| Build / zip | `npm run build` · `npm run zip` |
+| Install | `cd extension && npm ci` (runs `wxt prepare`), then once `npx playwright install chromium` |
+| Dev (Chromium with the extension, hot reload) | `npm run dev` (wxt) |
+| Build / zip | `npm run build` (→ `.output/chrome-mv3`) · `npm run zip` |
 | Unit + property + integration | `npm test` (vitest run) |
 | One test by catalog ID | `npx vitest run -t "OP5V-PROP-03"` |
-| E2E (real Chrome, unpacked extension) | `npm run test:e2e` (Playwright persistent context) |
-| Lint (incl. module boundaries, no-unsanitized) | `npm run lint` |
+| E2E (bundled Chromium, unpacked extension, headless) | `npm run test:e2e` (builds first; Playwright persistent context) |
+| Lint (module boundaries, single-writer stores, HTML sinks, storage.sync, network globals) | `npm run lint` |
 | Types | `npm run typecheck` |
-| Licence gate | `npm run licenses` |
-| Catalog coverage for a unit | `npm run catalog -- OP5V`. It lists catalog IDs that have no test with that ID in its name. |
-| Eval tool | `cd eval && uv sync && uv run pytest` |
+| Licence gate | `npm run licenses` (reads `package-lock.json`) |
+| Secret scan | `npm run secrets` (needs gitleaks 8.30.1 on PATH; CI installs it) |
+| Catalog coverage for a unit | `npm run catalog -- OP5V` (any ID prefix: `SVC0`, `SYS-SEC`). Lists catalog IDs that have no test with that ID in its name; `--strict` exits 1 |
+| Export contracts as JSON Schema for eval/ | `npm run schemas` (→ `eval/schemas/`) |
+| Eval tool | `cd eval && uv sync && uv run pytest` (not created yet: SVC7) |
 
 ## Non-negotiable rules
 

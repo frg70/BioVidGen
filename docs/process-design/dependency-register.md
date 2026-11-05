@@ -46,6 +46,37 @@ Policy: **$0 by default**; every dependency permissively licensed (project is MI
 | Tesseract OCR | — | Apache-2.0 | ⚠️ | Optional companion for scans |
 | React (or Preact), Zod, DOMPurify, Cytoscape.js, SQLite, Pydantic, httpx | — | MIT / MIT / Apache-2.0+MPL / MIT / public domain / MIT / BSD | ⚠️ from memory | Confirm with a licence scanner in CI |
 
+## 3b. Extension toolchain (SVC0 scaffold, added 2026-11-05)
+
+Checked 2026-11-05 with `npm view <pkg> version license` (npm registry metadata ✅) and enforced on every PR by `npm run licenses`, which reads the `license` field of all 340 packages in `extension/package-lock.json` (SYS-SEC-30). Versions are pinned exactly (`npm i -E`).
+
+| Package | Version | Licence | Scope | Use | Notes |
+|---|---|---|---|---|---|
+| preact | 11.1.1 | MIT ✅ | **runtime** | side panel / options UI | JSX via tsconfig `jsxImportSource: "preact"`; no Vite plugin needed |
+| dexie | 4.4.7 | **Apache-2.0** ✅ | **runtime** | IndexedDB wrapper | tech-spec-v3 §3 said "MIT ⚠️ verify": it is Apache-2.0, still allowed |
+| zod | 4.6.7 | MIT ✅ | **runtime** | schemas at every boundary; `z.toJSONSchema()` for eval | Zod 4 exports JSON Schema natively, so `zod-to-json-schema` is **not** needed |
+| wxt | 0.21.5 | MIT ✅ | dev (its small runtime helpers are bundled) | extension framework, build, zip | Register previously listed 0.20.x |
+| typescript | 6.0.3 | Apache-2.0 ✅ | dev | type checking | 7.0.2 is latest, but typescript-eslint 8.72 requires `<6.1.0` |
+| vitest | 5.1.0 | MIT ✅ | dev | unit / property / integration tests | |
+| fast-check | 4.10.2 | MIT ✅ | dev | property tests | |
+| msw | 3.0.3 | MIT ✅ | dev | HTTP mocking for client tests (OP3+) | installed now, first used by scholarly clients |
+| fake-indexeddb | 6.2.7 | Apache-2.0 ✅ | dev | IndexedDB in Node tests | |
+| @playwright/test | 1.64.1 | Apache-2.0 ✅ | dev | e2e in bundled Chromium (headless via `channel: 'chromium'`) | browsers downloaded by `npx playwright install chromium` |
+| eslint | 10.14.0 | MIT ✅ | dev | lint | |
+| @eslint/js | 10.0.1 | MIT ✅ | dev | lint presets | |
+| typescript-eslint | 8.72.1 | MIT ✅ | dev | TS lint | |
+| eslint-plugin-no-unsanitized | 4.1.5 | MPL-2.0 ✅ | dev only (allowed) | SYS-SEC-20 | |
+| globals | 17.14.0 | MIT ✅ | dev | ESLint globals | |
+| tsx | 4.23.15 | MIT ✅ | dev | runs `scripts/*.ts` | |
+| @types/node | 22.20.5 | MIT ✅ | dev | Node types for scripts/tests | |
+| lightningcss (transitive, via vite) | 1.33.0 | MPL-2.0 ✅ | dev only (allowed) | CSS tooling in Vite 8 | |
+| gitleaks (CLI, not npm) | 8.30.1 | MIT ✅ (GitHub licence API) | CI tool | SYS-SEC-14 secret scan | Binary pinned by sha256 in CI. README says the project is feature-complete (security fixes only; author moved to "Betterleaks"): revisit if it stops receiving fixes |
+| GitHub Actions: actions/checkout v7.0.1, actions/setup-node v7.1.0, actions/upload-artifact v7.0.2 | pinned by commit SHA | MIT | CI | | gitleaks-action is not used (we run the binary directly) |
+
+**Rejected / not added:** eslint-plugin-boundaries 7.4.1 (MIT ✅): replaced by a ~90-line in-repo rule (`extension/eslint-rules/boundaries.js`) because one-writer-per-store needs per-file allow-lists. zod-to-json-schema: unnecessary with Zod 4. @preact/preset-vite: unnecessary for the empty scaffold (no HMR for Preact components; revisit if UI work needs it).
+
+**Licence totals (2026-11-05):** runtime 3 packages (2 MIT, 1 Apache-2.0); dev 337 (259 MIT, 20 Apache-2.0, 19 ISC, 19 BSD-2-Clause, 5 BSD-3-Clause, 13 MPL-2.0 = eslint-plugin-no-unsanitized + lightningcss and its 11 platform binaries, 1 BlueOak-1.0.0, 1 MIT OR CC0-1.0). `npm audit --omit=dev`: 0 vulnerabilities. Full `npm audit`: 10 moderate, all in the ESLint toolchain (minimatch via @eslint/config-array, typescript-estree); dev-only, below the PR gate (high/critical runtime).
+
 ## 4. Distribution
 
 | Item | Cost | Status |
