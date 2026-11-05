@@ -17,7 +17,7 @@ Update this file at the end of every working session, in the same PR as the work
 - **Git:** docs committed on `docs/pipeline-v3` (6 commits, not pushed). `feat/svc0-scaffold` branches from it, so neither is on `main` yet.
 
 ## Next up — P0 order (from `docs/impl-plans/README.md`)
-- [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. **Open:** push the branch and confirm CI green on GitHub; manual check that clicking the toolbar icon opens the panel in real Chrome.
+- [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. **Open:** push the branch and confirm CI green on GitHub. Toolbar click opening the panel verified in Google Chrome 156 (2026-11-05).
 - [ ] Spikes S1–S7. Record results in the table below.
 - [x] OP5V in TypeScript (reference), committed on `feat/op5v-validate-evidence`:
   - 88/88 unit tests green; catalog OP5V 32/40;
@@ -48,7 +48,7 @@ Human track, in parallel. It is on the critical path through ADR-0008.
 | Spike | Question | Result | Date | Changes |
 |---|---|---|---|---|
 | S1 | Gemini Nano: availability, context size, Spanish quality on 10 abstracts, `responseConstraint` support | [pending] | | OP5 adapter; default provider |
-| S2 | Extension -> local server on 127.0.0.1 (Local Network Access); `OLLAMA_ORIGINS` | **Pass (Chromium 156 headless, partial).** Extension page and service worker reach `http://127.0.0.1:8765` with no host permission: CORS preflight carries `Origin: chrome-extension://<id>`, then GET 200. A public web page fetch fails and the server sees **no request** (blocked before sending). Not yet checked: headed stable Chrome (possible LNA prompt), Ollama `OLLAMA_ORIGINS` | 2026-11-05 | ADR-0010 gate passed; backend must still require token + Origin/Host checks (other local pages/apps can reach it) |
+| S2 | Extension -> local server on 127.0.0.1 (Local Network Access); `OLLAMA_ORIGINS` | **Pass.** (1) Chromium 156 headless: extension page + service worker reach `http://127.0.0.1` with no host permission (CORS preflight with `Origin: chrome-extension://<id>`); a public page is blocked before sending. (2) **Google Chrome 156 stable, headed** (extension loaded via CDP `Extensions.loadUnpacked`, throwaway profile): extension page and service worker -> backend 200, **no prompt**; toolbar click (Extensions menu -> BioVidGen) opens the side panel; a **public page triggers the LNA permission bubble** ("quiere: Acceder a otras aplicaciones y servicios de este dispositivo", Permitir/Bloquear) instead of a silent block. Not checked: Ollama `OLLAMA_ORIGINS` | 2026-11-05 | If a user clicks Permitir on a malicious site, only the backend checks stop it: Origin allowlist + token (BE0-SEC-03/02) are load-bearing, never relax them |
 | S3 | Exact OpenAlex/Crossref retraction, EoC and preprint queries; OpenAlex `pmid` filter; recall/precision on samples | [pending] | | OP12 |
 | S4 | Side-panel call lifetime vs service-worker shutdown | [pending] | | orchestration |
 | S5 | Live free-tier quotas and `json_schema` support: Gemini, Groq, OpenRouter | [pending] | | OP5, Gate 2 headroom |
