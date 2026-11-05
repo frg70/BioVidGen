@@ -1,0 +1,9 @@
+{
+  "extName": { "message": "BioVidGen" },
+  "extDescription": { "message": "Autores, estado de retractación y resumen en español con citas verificadas del artículo." },
+  "actionTitle": { "message": "Abrir BioVidGen" },
+  "panelTitle": { "message": "BioVidGen" },
+  "panelEmpty": { "message": "Abre un artículo científico para ver sus datos aquí." },
+  "optionsTitle": { "message": "Opciones de BioVidGen" },
+  "optionsEmpty": { "message": "Aún no hay opciones configurables." }
+}

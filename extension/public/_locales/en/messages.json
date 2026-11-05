@@ -1,0 +1,9 @@
+{
+  "extName": { "message": "BioVidGen" },
+  "extDescription": { "message": "Authors, retraction status and a Spanish summary with quotes verified against the paper." },
+  "actionTitle": { "message": "Open BioVidGen" },
+  "panelTitle": { "message": "BioVidGen" },
+  "panelEmpty": { "message": "Open a scientific article to see its details here." },
+  "optionsTitle": { "message": "BioVidGen options" },
+  "optionsEmpty": { "message": "No settings yet." }
+}

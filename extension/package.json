@@ -1,0 +1,45 @@
+{
+  "name": "biovidgen-extension",
+  "private": true,
+  "version": "0.0.1",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "postinstall": "wxt prepare",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "wxt build && playwright test",
+    "licenses": "tsx scripts/licenses.ts",
+    "catalog": "tsx scripts/catalog.ts",
+    "schemas": "tsx scripts/export-json-schema.ts",
+    "secrets": "gitleaks git --redact --verbose .."
+  },
+  "dependencies": {
+    "dexie": "4.4.7",
+    "preact": "11.1.1",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.64.1",
+    "@types/node": "22.20.5",
+    "eslint": "10.14.0",
+    "eslint-plugin-no-unsanitized": "4.1.5",
+    "fake-indexeddb": "6.2.7",
+    "fast-check": "4.10.2",
+    "globals": "17.14.0",
+    "msw": "3.0.3",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1",
+    "vitest": "5.1.0",
+    "wxt": "0.21.5"
+  }
+}
