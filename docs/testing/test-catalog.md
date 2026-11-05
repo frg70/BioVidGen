@@ -187,6 +187,26 @@ The SVC0 plan (§11 task 1) asked for retry/limiter/messaging/log tests without 
 | SVC0-E2E-01 | side panel | toolbar opens panel (`openPanelOnActionClick`); empty state in Spanish | PR |
 | SVC0-E2E-02 | options page | renders | PR |
 
+### 1.10 BE0 local Python backend skeleton (added 2026-11-05, ADR-0010)
+Tests live in `backend/tests/`. Each test's docstring starts with its ID. `npm run catalog` only reads TypeScript, so it does not count these yet.
+| ID | Variant | Given → Expected | Gate |
+|---|---|---|---|
+| BE0-SEC-01 🛑 | loopback only | any bind address other than `127.0.0.1` refused at startup; malformed extension ids refused | PR |
+| BE0-SEC-02 🛑 | pairing token | API without token / wrong / empty token → 401 `UNAUTHORIZED` (constant-time compare); `/health` public | PR |
+| BE0-SEC-03 🛑 | Origin allowlist | foreign web origin, other extension id, `null`, other port → 403 even with token; own extension and own origin pass; no Origin passes only with token | PR |
+| BE0-SEC-04 🛑 | DNS rebinding | Host other than `127.0.0.1:<port>` / `localhost:<port>` → 403 | PR |
+| BE0-SEC-05 | CORS | preflight echoes the exact allowed origin, `Vary: Origin`; foreign origin gets no ACAO; never `*` | PR |
+| BE0-SEC-06 | body limit | Content-Length over limit → 413; chunked body → 411 | PR |
+| BE0-SEC-07 | token file | 256-bit hex, created once, stable, user-only permissions (0600 on POSIX) | PR |
+| BE0-SEC-08 🛑 | licence gate | runtime MIT/BSD/Apache-2.0/ISC/PSF-2.0; dev adds MPL-2.0; GPL family/unknown fail; real environment passes | PR |
+| BE0-SEC-09 | no docs | `/docs`, `/redoc`, `/openapi.json` absent (Swagger UI would load CDN assets); no `Server` header | PR |
+| BE0-SEC-10 🛑 | runtime closure | no httpx/requests/urllib3/certifi at runtime (stdlib urllib only); no telemetry SDK; `src/` imports none of them | PR |
+| BE0-UNIT-01 | health | `{ok, version}` only | PR |
+| BE0-UNIT-02 | SQLite | WAL, foreign keys, `user_version` = schema version; migrations idempotent | PR |
+| BE0-UNIT-03 | settings | env vars `BIOVIDGEN_DATA_DIR`, `_PORT`, `_EXTENSION_IDS`; defaults loopback, 8765, per-user data dir | PR |
+| BE0-OBS-01 | log schema | strict whitelist, constrained values; ring of 200 in SQLite | PR |
+| BE0-OBS-02 | request log | one row per request with runId (caller's if valid), route name, status, error code; no path, query, body, token or origin | PR |
+
 ---
 
 ## 2. Per-operation tests

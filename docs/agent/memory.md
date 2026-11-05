@@ -5,7 +5,9 @@ Last updated: 2026-11-05.
 Update this file at the end of every working session, in the same PR as the work. Keep it short: state, numbers and facts belong here; explanations go in `reasoning.md` or the docs.
 
 ## Status
-- **Phase:** P0 (spikes + walking skeleton), **in progress**. SVC0 scaffold done locally on `feat/svc0-scaffold` (all gates green locally; GitHub CI not yet run: branch not pushed). No feature code yet. `app/agent/` holds v1 notes only.
+- **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
+- **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton`.
+- `app/agent/` (owner's working tree renames it `app/backend/`, uncommitted) holds v1 notes only; the new backend is `backend/`.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
   - Tech spec v3 + ADR-0008/0009: `docs/process-design/`, `docs/adr/`
@@ -17,8 +19,17 @@ Update this file at the end of every working session, in the same PR as the work
 ## Next up — P0 order (from `docs/impl-plans/README.md`)
 - [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. **Open:** push the branch and confirm CI green on GitHub; manual check that clicking the toolbar icon opens the panel in real Chrome.
 - [ ] Spikes S1–S7. Record results in the table below.
-- [~] OP5V Validate evidence: **paused 2026-11-05** on `feat/op5v-validate-evidence` (uncommitted). TS version: 86/87 unit tests green, catalog OP5V 31/40, 0 false accepts on 500 generated near-quotes, numbers rule 100/100 planted caught. PERF-01 borderline on this laptop: validateDrafts p50 16 ms, p95 19–27 ms vs target 20 ms (plan fail line 100 ms). Kept as the reference implementation and test-vector source for the Python port (ADR-0010 accepted). Final: 88/88 unit green, catalog OP5V 32/40.
-- [x] ADR-0010 accepted 2026-11-05: one local Python backend (127.0.0.1) for the extension (thin client) and a local web app. Next: S2 spike (gate), then `backend/` skeleton, then OP5V port to Python using the TS tests as vectors.
+- [x] OP5V in TypeScript (reference), committed on `feat/op5v-validate-evidence`:
+  - 88/88 unit tests green; catalog OP5V 32/40;
+  - 0 false accepts on 500 generated near-quotes; numbers rule caught 100/100 planted numbers;
+  - validateDrafts p50 16 ms, p95 19–27 ms (target 20 ms; the test asserts the 100 ms fail line, D26).
+- [x] ADR-0010 accepted 2026-11-05. S2 gate passed (Chromium 156).
+- [x] **BE0 backend skeleton** (ADR-0010 step 1) on `feat/be0-backend-skeleton`:
+  - FastAPI on 127.0.0.1; pairing token; Host/Origin/CORS/body-size checks; SQLite with migrations; log ring with runId;
+  - licence gate; CI job `backend`;
+  - 17/17 pytest, ruff clean, licence gate 25 packages; smoke run OK.
+- [ ] **Next: OP5V port to Python** (ADR-0010 step 2), test-first. Vectors: `extension/fixtures/op5v/`, the TS adversarial cases. Add hypothesis (dev). Mutation run with mutmut.
+- [ ] Then ADR-0010 step 3: extension client (pairing UI, "backend off" state, rule 1/2 updates).
 - [ ] OP1 Detect → OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
@@ -130,8 +141,11 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: Spreading a typed array into `String.fromCharCode(...)` is ~8× slower than `.apply`; it dominated normaliser time.
 - 2026-11-05: Boundary lint matches module names as path segments: `contracts/summary.ts` reads as the `summary` module. Avoid file names equal to module names.
 - 2026-11-05: Windows `process.cpuUsage()` ticks at ~15.6 ms; useless for a 20 ms budget.
+- 2026-11-05: PowerShell 5.1 `Set-Content -Encoding utf8` and here-strings piped to `git commit -F -` break commit messages (BOM, args). Write the message file with the editor tool, then `git commit -F <file>`.
+- 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
+- 2026-11-05 (d): Owner accepted ADR-0010 and approved fastapi/uvicorn/pydantic, PSF-2.0 at runtime, and stdlib HTTP (no httpx at runtime). S2 passed. BE0 skeleton built test-first (red: collection error → green 17/17). FastAPI 0.162 brings opentelemetry-api (no-op; BE0-SEC-10 guards against an SDK). Nuitka is AGPL and PyInstaller GPL: Briefcase is the only packaging candidate.
 - 2026-11-05 (c): OP5V in TS test-first (red 33 → green 86/87). Owner then asked for a standalone local app and one shared Python backend; drafted ADR-0010 (Proposed) and paused OP5V. Nothing committed.
 - 2026-11-05 (b): SVC0 scaffold on `feat/svc0-scaffold`. Numbers: 54 unit/property/integration tests (Vitest ~8 s), 7 e2e (Playwright headless ~35–41 s), catalog SVC0 35/35, SYS-OBS 3/5, SYS-SEC 10/27 (rest belong to later units). Build 218 KB (side panel chunk 200 KB: Dexie + Zod; no budget set yet). Licence gate 340 packages pass. gitleaks: no leaks. Spec deltas D11–D21 recorded in impl-plans README.
 - 2026-11-05: Ran discovery → tech spec v3 → P0 impl plans → test catalog with coverage audit → Mermaid diagrams. Wrote CLAUDE.md, memory.md, reasoning.md, prompts.md. No code yet.

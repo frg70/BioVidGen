@@ -1,8 +1,16 @@
 # BioVidGen — instructions for Claude Code
 
-BioVidGen is an open-source (MIT), local-first **Chrome MV3 extension** for health-science students in Mexico. On an article page it shows authors, keywords and preprint / retraction / expression-of-concern status. It also writes a **Spanish structured summary in which every claim links to a quote verified to exist verbatim in the paper**.
+BioVidGen is an open-source (MIT), local-first tool for health-science students in Mexico. On an article page it shows authors, keywords and preprint / retraction / expression-of-concern status. It also writes a **Spanish structured summary in which every claim links to a quote verified to exist verbatim in the paper**.
 
-The extension has no backend, no accounts and no telemetry, and costs $0 per month to run. A separate dev-time Python tool (`eval/`) builds the expert gold set and evaluates prompts.
+**Two surfaces, one local backend (ADR-0010, accepted 2026-11-05):**
+- a **Chrome MV3 extension**, which becomes a thin client: it detects the paper, reads the page and renders the results;
+- a **local web app**, served by the backend, that works without Chrome.
+
+Both talk to **one Python backend** (`backend/`) on the user's machine, bound to `127.0.0.1` only. It holds the domain logic and storage.
+
+There is no hosted server, no accounts and no telemetry, and it costs $0 per month to run. A separate dev-time Python tool (`eval/`) builds the expert gold set and evaluates prompts.
+
+The TypeScript OP5V in `extension/src/summary/` is the reference implementation and test-vector source for the Python port.
 
 @docs/agent/memory.md
 
@@ -16,10 +24,10 @@ Read the relevant source before changing behaviour.
 | How to reason here; why each decision was made | `docs/agent/reasoning.md` |
 | Reusable prompts (unit, spike, review, end of session) | `docs/agent/prompts.md` |
 | Architecture, modules, interfaces, NFRs, phases | `docs/process-design/tech-spec-v3.md`, `system-spec-v3.yaml` |
-| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D10) |
+| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D26) |
 | Every test that must pass | `docs/testing/test-catalog.md` |
 | Entities, operations, metrics, hypotheses | `docs/discovery/discovery-process-map.md`, `docs/discovery/spec.yaml` |
-| Decisions | `docs/adr/` (0001 and 0002 superseded, 0005 withdrawn) |
+| Decisions | `docs/adr/` (0001 and 0002 superseded, 0005 withdrawn, 0010 amends 0006) |
 | Dependency licences, prices, limits | `docs/process-design/dependency-register.md` |
 
 When documents conflict, this is the precedence order. Report the conflict; do not pick silently.
@@ -46,11 +54,15 @@ extension/              WXT + TypeScript + Preact, Chrome MV3
   eslint-rules/         in-repo boundary rule (delta D13)
   scripts/              licences, catalog coverage, JSON Schema export
   tests/e2e/, fixtures/pages/, fixtures/api/
+backend/                BE0   Python 3.12 + uv + FastAPI + SQLite, 127.0.0.1 only (ADR-0010)
+  src/biovidgen/        config, security (token, Origin/Host, CORS, body limit), db, log, app
+  scripts/              licence_gate.py (rule 8)
+  tests/                pytest; each test's docstring starts with its catalog ID (BE0-*)
 eval/                   SVC7  Python 3.12 + uv: gold set, kappa, eval runner (dev-time only)
 docs/runbooks/          one section per unit (Definition of Done)
 ```
 
-`app/agent/main.py` and `app/agent/core/content-extraction/ocr.py` are notes from the v1 server design. Do not build on them. Do not delete them without owner approval.
+`app/agent/main.py` and `app/agent/core/content-extraction/ocr.py` are notes from the v1 server design (the owner's working tree renames them to `app/backend/`, uncommitted). Do not build on them; the new backend is `backend/`. Do not delete them without owner approval.
 
 ## Commands
 
@@ -71,6 +83,9 @@ Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this tabl
 | Catalog coverage for a unit | `npm run catalog -- OP5V` (any ID prefix: `SVC0`, `SYS-SEC`). Lists catalog IDs that have no test with that ID in its name; `--strict` exits 1 |
 | Export contracts as JSON Schema for eval/ | `npm run schemas` (→ `eval/schemas/`) |
 | Eval tool | `cd eval && uv sync && uv run pytest` (not created yet: SVC7) |
+| Backend: install / test | `cd backend && uv sync --locked` · `uv run pytest` · one test: `uv run pytest -k be0_sec_04` |
+| Backend: lint / format / licences | `uv run ruff check .` · `uv run ruff format --check .` · `uv run python scripts/licence_gate.py` |
+| Backend: run locally | `uv run biovidgen` (env: `BIOVIDGEN_DATA_DIR`, `BIOVIDGEN_PORT` default 8765, `BIOVIDGEN_EXTENSION_IDS` comma-separated). The pairing token is in `<data dir>/token` |
 
 ## Non-negotiable rules
 
@@ -80,7 +95,10 @@ Each rule is guarded by stop-ship tests in the catalog.
    - Scholarly APIs receive identifiers only (DOI, PMID, PMCID).
    - The LLM receives one section of text per call.
    - No telemetry, analytics or remote logging. (SYS-SEC-01…06)
+   - The backend binds to `127.0.0.1` only and follows the same allowlist. Every request passes the Host check, the Origin allowlist and the pairing token (BE0-SEC-01…04). The extension's call to the backend joins the allowlist with the extension-client step (ADR-0010 step 3).
 2. **Secrets.** API keys live only in `chrome.storage.local`. They never appear in `storage.sync`, logs, exports, diagnostics, prompts, fixtures or commits. (SYS-SEC-10…15)
+   - The backend pairing token (`<data dir>/token`) is a secret under the same rules.
+   - ADR-0010 moves API keys to the backend (OS keychain via keyring). Update this rule in that step.
 3. **Rendering.** Strings from pages, APIs or models are rendered with `textContent`, never with `innerHTML`. (SYS-SEC-20)
 4. **One writer per store.** Only the owning module writes its store.
    - `Summary` is written only by `summary/validate.ts` (OP5V).
@@ -93,7 +111,8 @@ Each rule is guarded by stop-ship tests in the catalog.
    - Constrain output to a schema.
    - Output is untrusted until OP5V validates it. (OP5-SEC-*)
 8. **Licences.**
-   - Runtime dependencies must be MIT, BSD, Apache-2.0 or ISC. MPL is allowed for dev-only tools.
+   - Runtime dependencies must be MIT, BSD, Apache-2.0, ISC or PSF-2.0 (PSF-2.0 added by the owner on 2026-11-05 for typing-extensions). MPL is allowed for dev-only tools.
+   - Backend outbound HTTP uses the standard library (`urllib.request`, OS certificate store). Never httpx, requests or certifi at runtime (BE0-SEC-10).
    - No AGPL or GPL anywhere: no PyMuPDF, no Ghostscript.
    - Add a dated entry to the dependency register before adding any dependency. (SYS-SEC-30)
 9. **$0.** No paid services. No API key ships in the repo.
