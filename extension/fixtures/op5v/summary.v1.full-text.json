@@ -1,0 +1,75 @@
+{
+  "doi": "10.5555/biovidgen.synthetic.1",
+  "pipelineVersion": "pv-fixture-1",
+  "mainTopic": "Suplementación con vitamina D e infecciones respiratorias",
+  "prerequisiteTopics": [
+    {
+      "topic": "ensayo clínico aleatorizado",
+      "label": "background_knowledge"
+    },
+    {
+      "topic": "riesgo relativo",
+      "label": "background_knowledge"
+    }
+  ],
+  "sections": {
+    "methodology": {
+      "summaryEs": "Ensayo aleatorizado, doble ciego, con 412 participantes de 65 a 85 años.",
+      "status": "verified",
+      "evidence": [
+        {
+          "quote": "We conducted a double\u2011blind, placebo\u2011controlled randomised trial in 12 primary care clinics",
+          "section": "methods",
+          "start": 0,
+          "end": 91
+        },
+        {
+          "quote": "Participants aged 65\u201385 years were randomly assigned (1:1)",
+          "section": "methods",
+          "start": 115,
+          "end": 173
+        },
+        {
+          "quote": "The sample size of 412 participants provided 80% power",
+          "section": "methods",
+          "start": 566,
+          "end": 620
+        }
+      ],
+      "rejected": [],
+      "numbersUnsupported": [],
+      "coverage": "full"
+    },
+    "results": {
+      "summaryEs": "Las infecciones bajaron un 30% con vitamina D.",
+      "status": "no_verificado",
+      "evidence": [
+        {
+          "quote": "Acute respiratory infections occurred in 81 participants in the vitamin D group",
+          "section": "results",
+          "start": 156,
+          "end": 235
+        }
+      ],
+      "rejected": [],
+      "numbersUnsupported": [
+        "30%"
+      ],
+      "coverage": "full"
+    },
+    "conclusions": {
+      "summaryEs": "",
+      "status": "failed",
+      "evidence": [],
+      "rejected": [],
+      "numbersUnsupported": [],
+      "coverage": "full"
+    }
+  },
+  "provider": "stub",
+  "modelId": "stub-0",
+  "promptHash": "p0",
+  "normaliserVersion": "1",
+  "createdAt": "2026-11-05T12:00:00.000Z",
+  "schemaVersion": 1
+}

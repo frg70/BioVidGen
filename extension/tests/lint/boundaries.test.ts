@@ -30,6 +30,24 @@ describe('boundary lint (eslint-rules/boundaries.js)', () => {
     expect(await lint('src/scholarly/status.ts', `export const f = () => import('../workspace/export');\n`)).toEqual(BAD);
   });
 
+  it('OP5V-SEC-01 sole writer of Summary: only summary/validate.ts imports the summaries repository (lint + real tree)', async () => {
+    const BAD = ['local/boundaries'];
+    expect(await lint('src/summary/validate.ts', imp('../core/db/repos/summaries'))).toEqual([]);
+    // Test files are exempt from the boundary rule (SVC0 design); the real-tree scan below covers production code.
+    for (const f of ['src/summary/evidence.ts', 'src/summary/normaliser.ts', 'src/summary/summarize.ts', 'src/summary/providers/nano.ts']) {
+      expect(await lint(f, imp(f.split('/').length > 3 ? '../../core/db/repos/summaries' : '../core/db/repos/summaries')), f).toEqual(BAD);
+    }
+    // The real tree: no other source file names the summaries repository.
+    const { readdirSync, readFileSync, statSync } = await import('node:fs');
+    const walk = (d: string): string[] =>
+      readdirSync(d).flatMap((x) => (statSync(join(d, x)).isDirectory() ? walk(join(d, x)) : /\.tsx?$/.test(x) ? [join(d, x)] : []));
+    const importers = [...walk(join(ROOT, 'src')), ...walk(join(ROOT, 'entrypoints'))]
+      .filter((f) => /repos\/summaries['"]/.test(readFileSync(f, 'utf8')))
+      .map((f) => f.slice(ROOT.length + 1).replace(/\\/g, '/'))
+      .filter((f) => !f.startsWith('src/core/db/')); // core/db owns the repositories and their tests
+    expect(importers).toEqual(['src/summary/validate.ts']);
+  });
+
   it('SYS-SEC-26 one writer per store: only the owner imports its repository', async () => {
     const BAD = ['local/boundaries'];
     expect(await lint('src/summary/validate.ts', imp('../core/db/repos/summaries'))).toEqual([]);
