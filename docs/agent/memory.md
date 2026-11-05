@@ -17,7 +17,8 @@ Update this file at the end of every working session, in the same PR as the work
 ## Next up — P0 order (from `docs/impl-plans/README.md`)
 - [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. **Open:** push the branch and confirm CI green on GitHub; manual check that clicking the toolbar icon opens the panel in real Chrome.
 - [ ] Spikes S1–S7. Record results in the table below.
-- [ ] OP5V Validate evidence (pure TS; build it first so the guarantee exists before any model).
+- [~] OP5V Validate evidence: **paused 2026-11-05** on `feat/op5v-validate-evidence` (uncommitted). TS version: 86/87 unit tests green, catalog OP5V 31/40, 0 false accepts on 500 generated near-quotes, numbers rule 100/100 planted caught. PERF-01 borderline on this laptop: validateDrafts p50 16 ms, p95 19–27 ms vs target 20 ms (plan fail line 100 ms). Kept as the reference implementation and test-vector source for the Python port (ADR-0010 accepted). Final: 88/88 unit green, catalog OP5V 32/40.
+- [x] ADR-0010 accepted 2026-11-05: one local Python backend (127.0.0.1) for the extension (thin client) and a local web app. Next: S2 spike (gate), then `backend/` skeleton, then OP5V port to Python using the TS tests as vectors.
 - [ ] OP1 Detect → OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
@@ -81,6 +82,7 @@ Format: fact (date, source).
 | 0007 | Proposed (pending S1, S2, S5) | Free-first, pluggable LLM: Nano → Ollama → bring-your-own key. |
 | 0008 | Proposed | Expert-written (concierge) summaries + blind test vs ChatGPT gate the LLM build. Fail → verifier pivot. |
 | 0009 | Proposed (pending S6) | Build OP12 ourselves; Citicious as reference only. |
+| 0010 | **Accepted** 2026-11-05 | One local Python backend (FastAPI + SQLite, 127.0.0.1) shared by the extension (thin client) and a local web app. Amends 0006. |
 | 0001, 0002 | Superseded by 0006 | |
 | 0005 | Withdrawn | |
 
@@ -109,6 +111,9 @@ Format: fact (date, source).
   - **H-V2 sample size: 75 judgments is underpowered; about 153 are needed.**
 - Resolved 2026-11-05: `.claude/` stays **fully ignored**. Untrack the skills committed in `2da8279` with `git rm -r --cached .claude` (prompt 0). Project `.claude/settings.json` is not versioned.
 - Resolved 2026-11-05: docs use **role names** (dev lead, QFB lead, physician, product lead). Real names are not needed. GitHub handles are needed only if CODEOWNERS/branch protection is set up for OP5-HUM-01 (prompt review); defer until then.
+- Resolved 2026-11-05: D-T6 symbol mapping = NFKC as is (µ→μ, superscripts fold; ± ≤ ≥ × unchanged).
+- Resolved 2026-11-05: D26 OP5V-PERF-01 asserts p95 ≤ 100 ms (plan fail line); 20 ms is a tracked target.
+- Resolved 2026-11-05: VW1 does **not** hide `abstract_only` sections that have rejected quotes (status stays `abstract_only`, plan §4).
 - Resolved 2026-11-05: the human track (OP11, interviews, instructor demos) **runs in parallel** with P0 code.
 
 ## Gotchas learned
@@ -121,6 +126,12 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: ESLint config load costs ~8 s cold inside Vitest; lint tests warm up in `beforeAll`.
 - 2026-11-05: Agent tooling: Bash heredocs on this machine collapse `\` and break on apostrophes; write files with the editor tool.
 
+- 2026-11-05: Agent tooling: `\uXXXX` escapes typed by the agent land in files as literal characters; restore visible escapes with a script that takes code points as numbers.
+- 2026-11-05: Spreading a typed array into `String.fromCharCode(...)` is ~8× slower than `.apply`; it dominated normaliser time.
+- 2026-11-05: Boundary lint matches module names as path segments: `contracts/summary.ts` reads as the `summary` module. Avoid file names equal to module names.
+- 2026-11-05: Windows `process.cpuUsage()` ticks at ~15.6 ms; useless for a 20 ms budget.
+
 ## Session log
+- 2026-11-05 (c): OP5V in TS test-first (red 33 → green 86/87). Owner then asked for a standalone local app and one shared Python backend; drafted ADR-0010 (Proposed) and paused OP5V. Nothing committed.
 - 2026-11-05 (b): SVC0 scaffold on `feat/svc0-scaffold`. Numbers: 54 unit/property/integration tests (Vitest ~8 s), 7 e2e (Playwright headless ~35–41 s), catalog SVC0 35/35, SYS-OBS 3/5, SYS-SEC 10/27 (rest belong to later units). Build 218 KB (side panel chunk 200 KB: Dexie + Zod; no budget set yet). Licence gate 340 packages pass. gitleaks: no leaks. Spec deltas D11–D21 recorded in impl-plans README.
 - 2026-11-05: Ran discovery → tech spec v3 → P0 impl plans → test catalog with coverage audit → Mermaid diagrams. Wrote CLAUDE.md, memory.md, reasoning.md, prompts.md. No code yet.

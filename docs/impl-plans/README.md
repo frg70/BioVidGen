@@ -55,6 +55,12 @@ Rough P0 effort from the task lists is 22–30 developer-days plus 1 expert-day.
 | D20 | Log schema | whitelist of keys | whitelist of keys **and** constrained values: `op`, `errorCode`, `provider`, `sizes` keys are short identifiers (regex); an invalid entry is replaced by `BAD_LOG_ENTRY` | free text cannot hide inside whitelisted fields |
 | D21 | Messaging | Zod both directions + `sender.id` check | also a sender-role check (`extension` vs `content`, default `extension`) and envelope `{v:1, name, payload}`; tab-targeted messages (panel → content script) arrive with OP1 | content scripts run in hostile pages and must not reach privileged handlers |
 
+| D22 | OP5V / SectionDraft | `section: SectionName`; intro job output not typed; `validateAndStore(doi, drafts, text, meta)` | draft `section` names the Summary slot (`methodology`/`results`/`conclusions`); separate `IntroDraftSchema {mainTopic, prerequisiteTopics}`; `drafts = {intro?, sections[]}`; Summary key field is `doi` (SVC0 store key), not `doi_norm` | the plan's `map(d.section)` had no defined mapping, and the intro job's output had no schema |
+| D23 | OP5V matching | "normalised substring" | a match must cover whole original clusters and **must not start or end inside a word** (`effective` inside `ineffective` is rejected); the matcher lives in `normaliser.ts`, so the CFG-01 hash guard covers it | a mid-word cut can flip meaning (negation prefix). Stricter, never fuzzy. Known limit: a quote that drops a leading whole word (`not`) is still a verbatim excerpt |
+| D24 | OP5V numbers rule | `/[-+±]?\d+(?:[.,]\d+)?\s?%?/` | the sign counts only at the start of a token (`5-10` → 5, 10; `COVID-19` → 19); digits glued to letters are not numbers (`HbA1c`); `n` and `statistics` are checked too | the plan regex turned ranges into negative numbers, which gave false rejects |
+| D25 | OP5V errors | `Result<Summary, "ALL_SECTIONS_FAILED">` | adds `STORE_FAILED` (put retried once, then fails; nothing stored) | OP5V-RES-01 needs a code for a blocked or aborted transaction |
+| D26 | OP5V-PERF-01 | catalog: p95 ≤ 20 ms; plan §7: target 20 ms, fails when > 100 ms | the PR test asserts the plan's **fail line, p95 ≤ 100 ms**; 20 ms stays the target, printed by the test and recorded in memory.md (this laptop: p50 16 ms, p95 19–27 ms) | owner decision 2026-11-05: a 20 ms wall-clock assertion is flaky on shared machines |
+
 None of these change module ownership, entity ownership or phase order.
 
 ## Next batch (remaining units)

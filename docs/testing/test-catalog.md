@@ -564,7 +564,7 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP5V-PROP-03 🛑 | PROP | near-quote rejection | one-word swap, inserted "no"/"not", number change (0.05→0.5, 95→59), reordered clauses, merged sentences from two places → rejected | PR |
 | OP5V-PROP-04 | PROP | idempotency/determinism | same input → byte-identical Summary | PR |
 | OP5V-UNIT-01 | UNIT | normaliser table | curly quotes, all dash variants, ligatures (NFKC), soft hyphen, ZW chars, NBSP/thin space, combining accents NFC vs NFD, case | PR |
-| OP5V-UNIT-02 | UNIT | scientific symbols | α β µ/μ (micro vs mu) ± ≤ ≥ × superscripts (10⁻³) [decide mapping] | PR |
+| OP5V-UNIT-02 | UNIT | scientific symbols | α β µ/μ (micro vs mu) ± ≤ ≥ × superscripts (10⁻³): NFKC only (µ→μ, ⁻³→-3); ± ≤ ≥ × α β unchanged (D-T6 resolved) | PR |
 | OP5V-UNIT-03 | UNIT | length rules | <20 chars or <4 words, >400 chars → rejected with reason | PR |
 | OP5V-UNIT-04 | UNIT | section correction | quote found in other section → accepted, section corrected, logged | PR |
 | OP5V-UNIT-05 | UNIT | quote spanning two sections | rejected | PR |
@@ -740,7 +740,7 @@ Statistical hygiene for all KPI tests: pre-register thresholds and analysis in `
 | D-T3 | PubMed lists give PMIDs, not DOIs | OP12-UNIT-15 | OpenAlex `pmid` filter [verify in S3] |
 | D-T4 | "Retraction and replacement", withdrawn preprints | OP12-UNIT-10/11 | show as retraction-class chip with specific text |
 | D-T5 | Wrong-language model output | OP5-UNIT-07 | one retry, then no_verificado |
-| D-T6 | Symbol mapping (µ vs μ, superscripts) in normaliser | OP5V-UNIT-02 | NFKC + explicit micro/mu fold; superscripts folded |
+| D-T6 | Symbol mapping (µ vs μ, superscripts) in normaliser | OP5V-UNIT-02 | **Resolved 2026-11-05 (owner): NFKC as is.** NFKC already folds µ→μ and superscripts; no extra mappings |
 | D-T7 | Incognito, file://, Google Scholar, Portuguese headings, ChromeOS | SYS-SEC-27, OP1-UNIT-14/18, OP4-UNIT-02, SYS-COMP-27 | not in v1; documented |
 | D-T8 | H-V2 sample size (75 judgments underpowered) | KPI-02 | recruit ≥31 students or label result "signal" in ADR-0008 |
 
