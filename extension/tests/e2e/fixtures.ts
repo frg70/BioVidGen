@@ -42,6 +42,7 @@ export const test = base.extend<{
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       args: [`--disable-extensions-except=${EXTENSION_DIR}`, `--load-extension=${EXTENSION_DIR}`, '--lang=es'],
+      env: { ...process.env, LANGUAGE: 'es' }, // Chromium on Linux takes its UI language from here and ignores --lang
     });
     context.on('request', (r) => {
       egress.push({ url: r.url(), method: r.method(), postData: r.postData(), fromServiceWorker: r.serviceWorker() !== null });
