@@ -6,7 +6,7 @@ Update this file at the end of every working session, in the same PR as the work
 
 ## Status
 - **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
-- **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton` → `feat/op1-detect-paper` → `feat/op5v-python-port`.
+- **Branches:** `feat/op5v-python-port` holds the whole chain from `docs/pipeline-v3` and is open as [PR #2](https://github.com/frg70/BioVidGen/pull/2) against `main`; CI green on it 2026-11-06. It is one large PR because the units were built as a chain: review by commit. `feat/be1-extension-client` stacks on it, local only.
 - `app/` (v1 notes) deleted with owner approval, 2026-11-06. Its user flow is recorded in `docs/process-design/process-map.md`.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
@@ -14,10 +14,10 @@ Update this file at the end of every working session, in the same PR as the work
   - P0 implementation plans: `docs/impl-plans/`
   - Test catalog: `docs/testing/` (473 tests + 20 KPI tests, 24 stop-ship)
 - **Discovery verdict:** Go with risks, with one amber flag: differentiation against free ChatGPT and free retraction extensions.
-- **Git:** docs committed on `docs/pipeline-v3` (6 commits, not pushed). `feat/svc0-scaffold` branches from it, so neither is on `main` yet.
+- **The repo is public.** Pushing publishes: run gitleaks over the range first.
 
 ## Next up — P0 order (from `docs/impl-plans/README.md`)
-- [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. **Open:** push the branch and confirm CI green on GitHub. Toolbar click opening the panel verified in Google Chrome 156 (2026-11-05).
+- [x] **SVC0 scaffold** (2026-11-05): WXT + TS strict + Preact + Vitest + fast-check + MSW + Playwright; boundary lint (in-repo rule) + no-unsanitized; licence gate; gitleaks; network-allowlist e2e; `catalog` script; CI workflow. Toolbar click opening the panel verified in Google Chrome 156 (2026-11-05).
 - [ ] Spikes S1–S7. Record results in the table below.
 - [x] OP5V in TypeScript (reference), committed on `feat/op5v-validate-evidence`:
   - 88/88 unit tests green; catalog OP5V 32/40;
@@ -43,8 +43,13 @@ Update this file at the end of every working session, in the same PR as the work
   - 1,788 backend tests;
   - no HTTP endpoint yet (step 3). No scheduled mutation job (the catalog gates OP5V-MUT-01 nightly).
   - catalog OP5V 38/45 (open: HYP-02, VAL-01, KPI-02 need eval or a pilot; E2E-01, A11Y-01, CON-01 need VW1 and OP13; MIG-01 needs a schema bump). BE0 15/15. 21 e2e pass.
-- [ ] **Next: ADR-0010 step 3**, extension client (pairing UI, "backend off" state, rule 1/2 updates).
-- [ ] OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
+- [x] **BE1 extension client** (ADR-0010 step 3) on `feat/be1-extension-client`, stacked on PR #2:
+  - the panel checks the backend when it opens, names what is wrong (off, id not allowed, no token, token refused) and pairs by pasted token;
+  - no new permission; rule 1 gains one host, `127.0.0.1:8765`;
+  - 161 unit tests, 26 e2e; catalog BE1 14/14;
+  - all states correct against the real backend with real CORS, in Chrome 156 and bundled Chromium, no prompt. Ran as a tab, not in the side panel itself;
+  - page text, the OP5V endpoint and the API-key move left for OP4 and OP5 (D35).
+- [ ] **Next:** OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
   - one paper flows from detection to export on 3 publishers;
@@ -92,6 +97,8 @@ Format: fact (date, source).
 - Prefix 10.64898 belongs to openRxiv. (2026-11-05, Crossref API)
 - biomedcentral.com redirects to link.springer.com. (2026-11-05)
 - PubMed result lists expose PMIDs, not DOIs. (design finding)
+- When the backend refuses an Origin, a CORS fetch fails exactly like a closed port. A `no-cors` GET sends no Origin, so a running backend answers it with an opaque response (status 0). (2026-11-06, Chrome 156 and Chromium 156 against the real backend)
+- Chromium on Linux ignores `--lang` and takes its UI language from `LANGUAGE`; Windows honours `--lang`. (2026-11-06, CI)
 - Zod 4 `.max()` on strings counts code points, not UTF-16 units: 1001 emoji pass `max(2000)` and also `max(1001)`. (2026-11-05, run against zod 4.6.7)
 - Pydantic strict `str` accepts lone surrogates; UTF-8 encoding (so SQLite) then fails. The port refuses them at the boundary. (2026-11-05, run)
 - Python 3.12 has Unicode 15.0, Node 22 has 16.0. Only characters unassigned in Python differ. (2026-11-05, OP5V-PY-02)
@@ -173,9 +180,12 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: JS `\s` and Python `\s` differ (Python adds U+001C-1F, U+0085), and Python `\d` matches all digits: port regexes spell out their sets. Stored offsets stay UTF-16 units; use `u16_len`.
 - 2026-11-05: `ruff format` on `normaliser.py` changes its hash, so OP5V-CFG-01 fails until the pin is regenerated.
 - 2026-11-05: pytest with `addopts=-q` plus another `-q` hides the summary line: read the exit code.
+- 2026-11-06: Playwright answers CORS itself on routed requests, so e2e cannot catch a real CORS problem. After changing the client or the backend's checks, run the by-hand table in `docs/runbooks/be1.md`.
+- 2026-11-06: Green on Windows is not green on Linux: CI's first run failed 7 e2e tests that always passed here.
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
+- 2026-11-06 (h): Owner approved deleting `app/`, the PR and step 3. PR #2 opened; first CI run failed on Linux locale, fixed, green. BE1 built test-first; real-browser check caught nothing, but self-review found 2 keyboard bugs (tests first).
 - 2026-11-06 (g): `npm run catalog` now reads Python test docstrings, so backend IDs count. E2E rerun, 21/21.
 - 2026-11-06 (f): Manual DOI entry committed (`ca39285`, D33). OP5V ported to Python test-first against vectors frozen from TS; own stdlib mutation runner after mutmut and cosmic-ray both failed (D34). Added hypothesis (dev). On-click alternative to ADR-0011 still the owner's call.
 - 2026-11-05 (e): Owner asked for paper detection ahead of the OP5V port. ADR-0011 drafted, owner chose site list then on-click; on-click failed in real Chrome, so site list only. Version kept in a new field. OP1 built test-first (red 48 → green). Real side panel checked in Chrome 156 through navigation and tab changes. Live: 11 of 14 publishers verified; ScienceDirect and medRxiv blocked automation; Europe PMC list unverified.

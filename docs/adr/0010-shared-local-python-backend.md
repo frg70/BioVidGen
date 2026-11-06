@@ -91,7 +91,7 @@ Bad:
 | 0 | Accept this ADR; S2 spike: can the extension reach `127.0.0.1` with a token under current Chrome? | spike notes in memory.md | stay on 0006 |
 | 1 | `backend/` skeleton: FastAPI on 127.0.0.1, `/health`, pairing token, Origin/Host checks, SQLite, structured log with runId, CI (ruff, pytest, licence gate, gitleaks) | security tests: no token → 401; foreign Origin → 403; rebinding Host → 403 | delete the folder |
 | 2 | OP5V in Python, test-first, against the shared vectors (0 false accepts, PROP-01..04, CFG-01 hash guard) | `uv run pytest`; mutation run (`backend/scripts/mutation_run.py`, delta D34: mutmut does not run on native Windows) | TS OP5V branch stays as reference |
-| 3 | Extension client: pairing UI, "backend off" state, POST page text → render | e2e with a stub backend | extension keeps the empty state |
+| 3 | Extension client: pairing UI, "backend off" state (page text moves to OP4 and the OP5 stub, API keys to OP5: delta D35) | e2e with a stub backend; real CORS by hand (`docs/runbooks/be1.md`) | extension keeps the empty state |
 | 4 | Local web app shell served by the backend | Playwright against 127.0.0.1 | — |
 | 5 | Packaging for one OS (Windows first: team machines) | install on a clean VM | ship as `uv run` for developers only |
 

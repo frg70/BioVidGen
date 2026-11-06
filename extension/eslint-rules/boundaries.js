@@ -14,6 +14,7 @@ export const MODULE_DEPS = {
   core: [],
   contracts: [],
   detect: ['core', 'contracts'],
+  backend: ['core'],
   scholarly: ['core', 'contracts', 'settings'],
   text: ['core', 'contracts'],
   summary: ['core', 'contracts', 'text', 'scholarly', 'settings'],
@@ -32,7 +33,7 @@ export const RESTRICTED = [
   { re: /(^|\/)repos\/logs$/, allow: ['src/core/log*.ts'], why: 'logs is written only by core/log (SVC0).' },
   {
     re: /(^|\/)core\/http$/,
-    allow: ['src/core/**', 'src/scholarly/clients/**', 'src/summary/providers/**', 'src/text/clients/**', 'src/settings/probes.ts'],
+    allow: ['src/core/**', 'src/backend/client.ts', 'src/scholarly/clients/**', 'src/summary/providers/**', 'src/text/clients/**', 'src/settings/probes.ts'],
     why: 'Network calls live only in client/provider folders (SYS-SEC-26).',
   },
   { re: /(^|\/)settings\/keys$/, allow: ['src/settings/**', 'src/summary/providers/**'], why: 'API keys are read only by summary/providers (SVC6).' },

@@ -1,3 +1,4 @@
+import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
 import type { PageContext } from '../../src/contracts/page-context';
 import { t } from '../../src/core/i18n';
@@ -138,11 +139,12 @@ function PageBody({ state, onEnterDoi, onClearDoi }: { state: PanelState } & Act
   );
 }
 
-export function PaperView({ state, onEnterDoi, onClearDoi }: { state: PanelState } & Actions) {
+export function PaperView({ state, onEnterDoi, onClearDoi, children }: { state: PanelState; children?: ComponentChildren } & Actions) {
   return (
     <main>
       <h1>{t('panelTitle')}</h1>
       <PageBody key={state.navigation} state={state} onEnterDoi={onEnterDoi} onClearDoi={onClearDoi} />
+      {children}
     </main>
   );
 }

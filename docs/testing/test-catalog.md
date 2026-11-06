@@ -56,7 +56,7 @@ Notation: `[specify]` unknown · `[decide]` a product decision the test exposes 
 ### 1.1 Privacy & egress
 | ID | Variant | Given → Expected | Gate |
 |---|---|---|---|
-| SYS-SEC-01 🛑 | network allowlist | e2e over all fixture flows; every request host ∈ {api.openalex.org, api.crossref.org, www.ebi.ac.uk, api.unpaywall.org (if enabled), chosen LLM host, localhost:11434} → else fail | PR |
+| SYS-SEC-01 🛑 | network allowlist | e2e over all fixture flows; every request host ∈ {api.openalex.org, api.crossref.org, www.ebi.ac.uk, api.unpaywall.org (if enabled), chosen LLM host, localhost:11434, 127.0.0.1:8765} → else fail | PR |
 | SYS-SEC-02 🛑 | payload allowlist | to scholarly hosts only DOI/PMID/PMCID, `mailto`, `api_key`, `select`, `filter`, `per-page` params; no URL of visited page, no title, no runId | PR |
 | SYS-SEC-03 🛑 | no telemetry | zero requests when the user only browses (no panel opened) on 20 fixture pages | PR |
 | SYS-SEC-04 | LLM payload scope | each LLM request body contains exactly one section text + prompt; no Settings, Feedback, URL history, other tabs | PR |
@@ -177,7 +177,7 @@ The SVC0 plan (§11 task 1) asked for retry/limiter/messaging/log tests without 
 | SVC0-UNIT-22 | catalog coverage | prefix exact (OP5 ≠ OP5V); ID boundary (SYS-SEC-01 ≠ SYS-SEC-010) | PR |
 | SVC0-SEC-01 | http allowlist | non-allowlisted host, plain http, look-alike host → `HOST_NOT_ALLOWED`, no fetch | PR |
 | SVC0-SEC-02 | messaging sender role | content script → extension-only handler refused (`FORBIDDEN_SENDER`) | PR |
-| SVC0-SEC-03 | allowlist constant | exact host list; http only to `localhost:11434` | PR |
+| SVC0-SEC-03 | allowlist constant | exact host list; http only to `localhost:11434` and `127.0.0.1:8765` | PR |
 | SVC0-SEC-04 | runtime imports | `src/` and `entrypoints/` import only runtime dependencies (licence gate covers what ships) | PR |
 | SVC0-INT-01 | Dexie schema v1 | stores, primary keys and indexes equal the SVC0 plan table | PR |
 | SVC0-INT-02 | DB open failure | → `DB_OPEN_FAIL` (memory-only mode), no throw | PR |
@@ -188,7 +188,7 @@ The SVC0 plan (§11 task 1) asked for retry/limiter/messaging/log tests without 
 | SVC0-E2E-02 | options page | renders | PR |
 
 ### 1.10 BE0 local Python backend skeleton (added 2026-11-05, ADR-0010)
-Tests live in `backend/tests/`. Each test's docstring starts with its ID. `npm run catalog` only reads TypeScript, so it does not count these yet.
+Tests live in `backend/tests/`. Each test's docstring starts with its ID, which `npm run catalog` reads.
 | ID | Variant | Given → Expected | Gate |
 |---|---|---|---|
 | BE0-SEC-01 🛑 | loopback only | any bind address other than `127.0.0.1` refused at startup; malformed extension ids refused | PR |
@@ -206,6 +206,24 @@ Tests live in `backend/tests/`. Each test's docstring starts with its ID. `npm r
 | BE0-UNIT-03 | settings | env vars `BIOVIDGEN_DATA_DIR`, `_PORT`, `_EXTENSION_IDS`; defaults loopback, 8765, per-user data dir | PR |
 | BE0-OBS-01 | log schema | strict whitelist, constrained values; ring of 200 in SQLite | PR |
 | BE0-OBS-02 | request log | one row per request with runId (caller's if valid), route name, status, error code; no path, query, body, token or origin | PR |
+
+### 1.11 BE1 extension client for the backend (added 2026-11-06, ADR-0010 step 3)
+| ID | Variant | Given → Expected | Gate |
+|---|---|---|---|
+| BE1-UNIT-01 | backend off | nothing listening → `BACKEND_OFF`; token not read or sent | PR |
+| BE1-UNIT-02 | refused Origin | CORS fetch fails, no-cors answers → `WRONG_ORIGIN`, not `BACKEND_OFF`; no token on either | PR |
+| BE1-UNIT-03 | no token | nothing stored, or a stored value that is not a token → `UNPAIRED`, API not called | PR |
+| BE1-UNIT-04 | paired | good token → ok; token only on the API path, never on `/health`; run id sent | PR |
+| BE1-UNIT-05 | stale token | 401 → `TOKEN_REJECTED` | PR |
+| BE1-UNIT-06 | pairing | stored only after acceptance; whitespace dropped; malformed input sends nothing; a refused token does not replace a stored one | PR |
+| BE1-UNIT-07 | another program on the port | HTML, wrong shape or 404 on `/health` → `BACKEND_OFF`; token never sent | PR |
+| BE1-SEC-01 🛑 | token not exposed | token absent from every result and log entry | PR |
+| BE1-SEC-02 🛑 | one host | only `http://127.0.0.1:8765`, no credentials or body; https, other ports, `localhost`, userinfo refused | PR |
+| BE1-SEC-03 🛑 | nothing about the page | with articles open: only `GET /health` and `GET /api/v1/status`, no body | PR |
+| BE1-E2E-01 | pairing flow | off → retry → field → bad input → refused → accepted → survives reload; token not left in the page | PR |
+| BE1-E2E-02 | refused Origin in the panel | names the exact `BIOVIDGEN_EXTENSION_IDS` value | PR |
+| BE1-E2E-03 | detection without a backend | with the backend off, the panel still works and offers manual DOI | PR |
+| BE1-A11Y-01 | keyboard | pairing by keyboard; focus follows the student's action and stays on retry; opening the panel takes no focus | PR |
 
 ---
 

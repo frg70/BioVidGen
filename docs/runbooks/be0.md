@@ -26,10 +26,10 @@ One Python process on the student's machine, listening on `127.0.0.1:<port>` (de
 | Failure | Detection | Response |
 |---|---|---|
 | Extension says "backend off" | `/health` unreachable | start it: `uv run biovidgen` (packaging is ADR-0010 step 5) |
-| Every API call is 401 | log rows `UNAUTHORIZED` | re-pair: copy `<data dir>/token` into the extension (pairing UI arrives in ADR-0010 step 3) |
+| Every API call is 401 | log rows `UNAUTHORIZED` | re-pair: paste `<data dir>/token` into the panel (`docs/runbooks/be1.md`) |
 | `corrupt pairing token file` at startup | process exits | delete `<data dir>/token`, restart, re-pair |
 | 403 `FORBIDDEN_ORIGIN` from the extension | log rows `FORBIDDEN_ORIGIN` | set `BIOVIDGEN_EXTENSION_IDS` to the extension's id (`chrome://extensions`). Unpacked builds get a path-based id |
-| Port in use | uvicorn exits at startup | `BIOVIDGEN_PORT=<free port>`; the extension must use the same port |
+| Port in use | uvicorn exits at startup | `BIOVIDGEN_PORT=<free port>` for the local app only: the extension knows only 8765 (delta D35) |
 | Licence gate fails in CI | `backend` job | replace the package, or (dev-only, permissive) extend `DEV_EXTRA` with a dependency-register entry. Never add GPL-family licences |
 | BE0-SEC-10 fails | `backend` job | an HTTP client, certifi or a telemetry SDK entered the runtime closure; remove it (CLAUDE.md rules 1 and 8) |
 

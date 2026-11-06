@@ -6,14 +6,16 @@
 export const SCHOLARLY_HOSTS = ['api.openalex.org', 'api.crossref.org', 'www.ebi.ac.uk', 'api.unpaywall.org'] as const;
 /** Ollama on the user's machine. Plain http is allowed only here. */
 export const LOCAL_LLM_HOSTS = ['localhost:11434'] as const;
-export const STATIC_ALLOWED_HOSTS: readonly string[] = [...SCHOLARLY_HOSTS, ...LOCAL_LLM_HOSTS];
+/** The BioVidGen backend on the user's machine (ADR-0010). Plain http, loopback only. */
+export const BACKEND_HOST = '127.0.0.1:8765';
+export const STATIC_ALLOWED_HOSTS: readonly string[] = [...SCHOLARLY_HOSTS, ...LOCAL_LLM_HOSTS, BACKEND_HOST];
 
 const HTTPS_HOSTS: readonly string[] = SCHOLARLY_HOSTS;
-const HTTP_HOSTS: readonly string[] = LOCAL_LLM_HOSTS;
+const HTTP_HOSTS: readonly string[] = [...LOCAL_LLM_HOSTS, BACKEND_HOST];
 
 /**
  * True when `url` may be requested: https to a scholarly host or the user-chosen LLM host,
- * or http to local Ollama. `userLlmHosts` comes from Settings (the chosen provider).
+ * or http to local Ollama or the local backend. `userLlmHosts` comes from Settings (the chosen provider).
  */
 export function isAllowedUrl(url: string, userLlmHosts: readonly string[] = []): boolean {
   let u: URL;
