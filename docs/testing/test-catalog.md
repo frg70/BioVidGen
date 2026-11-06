@@ -631,6 +631,11 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP5V-OBS-01 | OBS | log entry | counts of rejections by reason; no text | PR |
 | OP5V-A11Y-01 | A11Y | status UI | badges have text; reveal control keyboard-accessible; warning announced | PR |
 | OP5V-KPI-02 | KPI | false-reject rate | ≤10% on gold + model output | EVAL |
+| OP5V-PY-01 🛑 | CON | Python port conformance | 1,242 cases: same Summary and counts as the TypeScript reference; normaliser text, offset map and numbers on 414 strings; `find_quote` on 69 pairs | PR |
+| OP5V-PY-02 | CON | every code point | same fold, mark, word and space class as the reference; only characters unassigned in Python's Unicode may differ | PR |
+| OP5V-PY-03 | CFG | vector freshness | reference source hash matches the frozen vectors | PR |
+| OP5V-PY-04 | UNIT | words above U+FFFF | a quote cannot start inside one (D34) | PR |
+| OP5V-PY-05 | PROP | fast path | ASCII fast path gives exactly what per-cluster processing gives | PR |
 
 ### OP13 · Export appraisal sheet (DETERMINISTIC)
 | ID | Type | Variant | Given → Expected | Gate |

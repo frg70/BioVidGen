@@ -15,6 +15,7 @@ dependencies = [
 [dependency-groups]
 dev = [
   "pytest==9.2.0",
+  "hypothesis==6.170.15",
   "ruff==0.17.3",
   "httpx==0.28.1", # FastAPI TestClient only; never imported by src/
 ]

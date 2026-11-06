@@ -19,6 +19,7 @@
     "licenses": "tsx scripts/licenses.ts",
     "catalog": "tsx scripts/catalog.ts",
     "schemas": "tsx scripts/export-json-schema.ts",
+    "vectors": "tsx scripts/export-op5v-vectors.ts",
     "secrets": "gitleaks git --redact --verbose .."
   },
   "dependencies": {

@@ -24,7 +24,7 @@ Read the relevant source before changing behaviour.
 | How to reason here; why each decision was made | `docs/agent/reasoning.md` |
 | Reusable prompts (unit, spike, review, end of session) | `docs/agent/prompts.md` |
 | Architecture, modules, interfaces, NFRs, phases | `docs/process-design/tech-spec-v3.md`, `system-spec-v3.yaml` |
-| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D32) |
+| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D34) |
 | Every test that must pass | `docs/testing/test-catalog.md` |
 | Entities, operations, metrics, hypotheses | `docs/discovery/discovery-process-map.md`, `docs/discovery/spec.yaml` |
 | Decisions | `docs/adr/` (0001 and 0002 superseded, 0005 withdrawn, 0010 amends 0006; 0011 page access for OP1) |
@@ -56,7 +56,8 @@ extension/              WXT + TypeScript + Preact, Chrome MV3
   tests/e2e/, fixtures/pages/, fixtures/api/
 backend/                BE0   Python 3.12 + uv + FastAPI + SQLite, 127.0.0.1 only (ADR-0010)
   src/biovidgen/        config, security (token, Origin/Host, CORS, body limit), db, log, app
-  scripts/              licence_gate.py (rule 8)
+  src/biovidgen/summary/  OP5V: contracts, normaliser, evidence, validate (ADR-0010 step 2)
+  scripts/              licence_gate.py (rule 8), mutation_run.py (OP5V-MUT-01)
   tests/                pytest; each test's docstring starts with its catalog ID (BE0-*)
 eval/                   SVC7  Python 3.12 + uv: gold set, kappa, eval runner (dev-time only)
 docs/runbooks/          one section per unit (Definition of Done)
@@ -82,9 +83,11 @@ Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this tabl
 | Secret scan | `npm run secrets` (needs gitleaks 8.30.1 on PATH; CI installs it) |
 | Catalog coverage for a unit | `npm run catalog -- OP5V` (any ID prefix: `SVC0`, `SYS-SEC`). Lists catalog IDs that have no test with that ID in its name; `--strict` exits 1 |
 | Export contracts as JSON Schema for eval/ | `npm run schemas` (→ `eval/schemas/`) |
+| Regenerate the vectors the Python OP5V runs against | `npm run vectors` (→ `fixtures/op5v/vectors/`; needed when OP5V-PY-03 fails) |
 | Eval tool | `cd eval && uv sync && uv run pytest` (not created yet: SVC7) |
 | Backend: install / test | `cd backend && uv sync --locked` · `uv run pytest` · one test: `uv run pytest -k be0_sec_04` |
 | Backend: lint / format / licences | `uv run ruff check .` · `uv run ruff format --check .` · `uv run python scripts/licence_gate.py` |
+| Backend: mutation run (minutes; on temporary copies) | `uv run python scripts/mutation_run.py` |
 | Backend: run locally | `uv run biovidgen` (env: `BIOVIDGEN_DATA_DIR`, `BIOVIDGEN_PORT` default 8765, `BIOVIDGEN_EXTENSION_IDS` comma-separated). The pairing token is in `<data dir>/token` |
 
 ## Non-negotiable rules
@@ -101,7 +104,7 @@ Each rule is guarded by stop-ship tests in the catalog.
    - ADR-0010 moves API keys to the backend (OS keychain via keyring). Update this rule in that step.
 3. **Rendering.** Strings from pages, APIs or models are rendered with `textContent`, never with `innerHTML`. (SYS-SEC-20)
 4. **One writer per store.** Only the owning module writes its store.
-   - `Summary` is written only by `summary/validate.ts` (OP5V).
+   - `Summary` is written only by `summary/validate.ts` (OP5V), and in the backend only by `summary/validate.py`.
    - Boundary lint enforces this. (SYS-SEC-26, OP5V-SEC-01)
 5. **Verified means verbatim.** Never add fuzzy matching to OP5V. Any change to the normaliser needs a `NORMALISER_VERSION` bump. (OP5V-PROP-01…03, OP5V-CFG-01)
 6. **Retraction wording.** Never write "no retractado" or "not retracted". Write "no se encontró retractación en {fuentes} al {fecha}". (OP12-PROP-01)

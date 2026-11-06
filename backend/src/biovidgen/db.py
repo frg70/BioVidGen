@@ -20,6 +20,17 @@ MIGRATIONS: list[str] = [
     );
     CREATE INDEX logs_run_id ON logs(run_id);
     """,
+    """
+    ALTER TABLE logs ADD COLUMN sizes TEXT;
+    CREATE TABLE summaries (
+      doi TEXT NOT NULL,
+      pipeline_version TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      body TEXT NOT NULL,
+      PRIMARY KEY (doi, pipeline_version)
+    );
+    CREATE INDEX summaries_doi ON summaries(doi, created_at);
+    """,
 ]
 SCHEMA_VERSION = len(MIGRATIONS)
 

@@ -97,11 +97,14 @@ Checked 2026-11-05 against PyPI JSON metadata and the installed package metadata
 | typing-extensions | 4.16.0 | **PSF-2.0** ✅ (allowed by owner decision) | runtime (transitive) | pydantic requirement | |
 | opentelemetry-api | 1.45.2 | Apache-2.0 ✅ | runtime (transitive, via fastapi) | none by us | API only: a no-op without an SDK and exporter, so **no telemetry**. BE0-SEC-10 fails if an SDK or exporter is ever added or if `src/` imports it |
 | pytest | 9.2.0 | MIT ✅ | dev | tests | |
+| hypothesis | 6.170.15 | MPL-2.0 ✅ (dev only) | dev | property tests for the OP5V port (added 2026-11-06) | |
 | ruff | 0.17.3 | MIT ✅ | dev | lint + format | |
 | httpx | 0.28.1 | BSD-3-Clause ✅ | **dev only** | FastAPI `TestClient` | pulls certifi (MPL-2.0, dev-only, allowed). Starlette now warns that `httpx` is deprecated for its TestClient in favour of `httpx2`; not switched (new package, unverified) |
 | uv | 0.9.11 | MIT OR Apache-2.0 ✅ (PyPI classifiers) | dev / CI tool | environment, lockfile, build backend (`uv_build`) | installed in CI with `pipx install uv==0.9.11` |
 
-**Checked, not added yet:** keyring 25.7.0 (MIT, for API keys when OP5 lands), import-linter 2.15 (BSD-2, add when there are two or more modules), hypothesis 6.170.14 (MPL-2.0, dev, add with the OP5V port), mutmut 3.8.1 (BSD-3, mutation testing).
+**Mutation testing (2026-11-06, delta D34):** no package. mutmut 3.8.1 (BSD-3) refuses native Windows, and cosmic-ray 8.7.0 (MIT) depends on yattag (LGPL), which the licence gate refuses. OP5V-MUT-01 uses `backend/scripts/mutation_run.py` (standard library).
+
+**Checked, not added yet:** keyring 25.7.0 (MIT, for API keys when OP5 lands), import-linter 2.15 (BSD-2, add when there are two or more modules).
 
 **Packaging candidates (ADR-0010):** Briefcase 0.4.7 (BSD-3-Clause) is the only candidate that passes rule 8. PyInstaller 6.22.3 (GPL-2.0-or-later with a bootloader exception) and Nuitka 4.3.4 (AGPL-3.0) are rejected.
 

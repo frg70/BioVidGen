@@ -2,10 +2,15 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from hypothesis import HealthCheck, settings
 
 from biovidgen.app import create_app
 from biovidgen.config import Settings
 from biovidgen.security import load_or_create_token
+
+# No per-example deadline: a timing limit makes property tests flaky on a busy machine (OP5V-PERF-01 measures time).
+settings.register_profile("no_deadline", deadline=None, suppress_health_check=list(HealthCheck))
+settings.load_profile("no_deadline")
 
 EXT_ID = "abcdefghijklmnopabcdefghijklmnop"
 EXT_ORIGIN = f"chrome-extension://{EXT_ID}"

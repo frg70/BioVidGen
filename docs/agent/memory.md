@@ -1,12 +1,12 @@
 # BioVidGen — Project memory
 
-Last updated: 2026-11-05.
+Last updated: 2026-11-06.
 
 Update this file at the end of every working session, in the same PR as the work. Keep it short: state, numbers and facts belong here; explanations go in `reasoning.md` or the docs.
 
 ## Status
 - **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
-- **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton` → `feat/op1-detect-paper`.
+- **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton` → `feat/op1-detect-paper` → `feat/op5v-python-port`.
 - `app/agent/` (owner's working tree renames it `app/backend/`, uncommitted) holds v1 notes only; the new backend is `backend/`.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
@@ -34,8 +34,15 @@ Update this file at the end of every working session, in the same PR as the work
   - fixture suite 11/11 labelled DOIs returned correctly, 0 wrong papers (16 fixtures: 12 real metadata captures, 4 synthetic);
   - p95 9.2 ms on 60k nodes + 200 metas (headless; target 50 ms);
   - manual DOI entry for pages with no usable DOI, on or off the list (D33, no new permission). Unchecked until OP3.
-- [ ] **Next: OP5V port to Python** (ADR-0010 step 2), test-first. Vectors: `extension/fixtures/op5v/`, the TS adversarial cases. Add hypothesis (dev). Mutation run with mutmut.
-- [ ] Then ADR-0010 step 3: extension client (pairing UI, "backend off" state, rule 1/2 updates).
+- [x] **OP5V port to Python** (ADR-0010 step 2) on `feat/op5v-python-port`, in `backend/src/biovidgen/summary/`:
+  - same Summary and counts as the TS reference on 1,242 frozen full-pipeline cases (`extension/fixtures/op5v/vectors/`); normaliser text, offset map and numbers on 414 strings; every code point classified the same;
+  - 0 false accepts on 500 near-quotes; 100/100 planted numbers caught;
+  - two stricter differences (D34): lone surrogates refused; a quote cannot start or end inside a word above U+FFFF;
+  - validate p50 ~37-45 ms, p95 ~40-56 ms on this machine (target 20 ms, fail line 100 ms: target missed, fail line met);
+  - mutation 93.9% (248/264, target 90%; evidence.py 106/106). 7 kills are hangs in loop mutants; without them 91.3%. All 16 survivors read as equivalent (list in `docs/runbooks/op5v.md`). The first run (88.3%) found a real gap: nothing tested the whole-cluster rule, so "dose of 1" against "dose of ½" went unguarded. The code was right; tests added;
+  - 1,788 backend tests;
+  - no HTTP endpoint yet (step 3). No scheduled mutation job. `npm run catalog` does not read Python docstrings, so PY rows are not counted by the script.
+- [ ] **Next: ADR-0010 step 3**, extension client (pairing UI, "backend off" state, rule 1/2 updates).
 - [ ] OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
@@ -84,6 +91,10 @@ Format: fact (date, source).
 - Prefix 10.64898 belongs to openRxiv. (2026-11-05, Crossref API)
 - biomedcentral.com redirects to link.springer.com. (2026-11-05)
 - PubMed result lists expose PMIDs, not DOIs. (design finding)
+- Zod 4 `.max()` on strings counts code points, not UTF-16 units: 1001 emoji pass `max(2000)` and also `max(1001)`. (2026-11-05, run against zod 4.6.7)
+- Pydantic strict `str` accepts lone surrogates; UTF-8 encoding (so SQLite) then fails. The port refuses them at the boundary. (2026-11-05, run)
+- Python 3.12 has Unicode 15.0, Node 22 has 16.0. Only characters unassigned in Python differ. (2026-11-05, OP5V-PY-02)
+- mutmut 3.8.1 refuses native Windows ("please use the WSL"). cosmic-ray 8.7.0 pulls yattag (LGPL), refused by the licence gate. (2026-11-05, ran both)
 
 **Still `[verify]`:**
 - Crossref `filter=updates:{doi}` / `updated-by`
@@ -158,9 +169,13 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: Processes started from an agent session die with it. Create long-lived test windows through WMI (`Win32_Process.Create`). Clear stale flag files before a UI Automation run.
 - 2026-11-05: `npm audit` reports 10 moderate findings in the eslint dev chain (minimatch via `@eslint/config-array`); runtime is clean. Not force-fixed: `--force` changes major versions.
 - 2026-11-05: OP5V-PERF-01 and the FUZZ tests are limited by time and fail under heavy CPU load (p95 133-165 ms with a stuck VS Code installer running), then pass again with no code change. Check load before suspecting a regression. OP1-FUZZ-01 runs 50 pages in PRs; the catalog's 10k nightly run has no workflow yet.
+- 2026-11-05: JS `\s` and Python `\s` differ (Python adds U+001C-1F, U+0085), and Python `\d` matches all digits: port regexes spell out their sets. Stored offsets stay UTF-16 units; use `u16_len`.
+- 2026-11-05: `ruff format` on `normaliser.py` changes its hash, so OP5V-CFG-01 fails until the pin is regenerated.
+- 2026-11-05: pytest with `addopts=-q` plus another `-q` hides the summary line: read the exit code.
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
+- 2026-11-06 (f): Manual DOI entry committed (`ca39285`, D33). OP5V ported to Python test-first against vectors frozen from TS; own stdlib mutation runner after mutmut and cosmic-ray both failed (D34). Added hypothesis (dev). On-click alternative to ADR-0011 still the owner's call.
 - 2026-11-05 (e): Owner asked for paper detection ahead of the OP5V port. ADR-0011 drafted, owner chose site list then on-click; on-click failed in real Chrome, so site list only. Version kept in a new field. OP1 built test-first (red 48 → green). Real side panel checked in Chrome 156 through navigation and tab changes. Live: 11 of 14 publishers verified; ScienceDirect and medRxiv blocked automation; Europe PMC list unverified.
 - 2026-11-05 (d): Owner accepted ADR-0010 and approved fastapi/uvicorn/pydantic, PSF-2.0 at runtime, and stdlib HTTP (no httpx at runtime). S2 passed. BE0 skeleton built test-first (red: collection error → green 17/17). FastAPI 0.162 brings opentelemetry-api (no-op; BE0-SEC-10 guards against an SDK). Nuitka is AGPL and PyInstaller GPL: Briefcase is the only packaging candidate.
 - 2026-11-05 (c): OP5V in TS test-first (red 33 → green 86/87). Owner then asked for a standalone local app and one shared Python backend; drafted ADR-0010 (Proposed) and paused OP5V. Nothing committed.

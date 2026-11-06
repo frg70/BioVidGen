@@ -59,6 +59,13 @@ describe('OP5V normaliser', () => {
     expect(findQuote(hay, 'admissions. total five.')).toBeGreaterThan(0);
   });
 
+  it('OP5V-PY-03 the vectors the Python port runs against come from this reference (npm run vectors)', () => {
+    const hash = createHash('sha256');
+    for (const file of ['normaliser.ts', 'evidence.ts']) hash.update(readFileSync(join(import.meta.dirname, file), 'utf8').replace(/\r\n/g, '\n'));
+    const frozen = JSON.parse(readFileSync(join(import.meta.dirname, '..', '..', 'fixtures', 'op5v', 'vectors', 'reference.json'), 'utf8')) as { sha256: string };
+    expect(frozen.sha256, 'OP5V reference changed: run npm run vectors, then the Python tests').toBe(hash.digest('hex'));
+  });
+
   it('OP5V-CFG-01 normaliser version guard: normaliser.ts content is pinned to NORMALISER_VERSION', () => {
     const src = readFileSync(join(import.meta.dirname, 'normaliser.ts'), 'utf8').replace(/\r\n/g, '\n');
     const hash = createHash('sha256').update(src).digest('hex');
