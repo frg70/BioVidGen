@@ -63,8 +63,6 @@ eval/                   SVC7  Python 3.12 + uv: gold set, kappa, eval runner (de
 docs/runbooks/          one section per unit (Definition of Done)
 ```
 
-`app/agent/main.py` and `app/agent/core/content-extraction/ocr.py` are notes from the v1 server design (the owner's working tree renames them to `app/backend/`, uncommitted). Do not build on them; the new backend is `backend/`. Do not delete them without owner approval.
-
 ## Commands
 
 Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this table accurate when they change.

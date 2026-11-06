@@ -7,7 +7,7 @@ Update this file at the end of every working session, in the same PR as the work
 ## Status
 - **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
 - **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton` → `feat/op1-detect-paper` → `feat/op5v-python-port`.
-- `app/agent/` holds v1 notes only; the new backend is `backend/`. On 2026-11-06 the whole `app/` folder, with the uncommitted rename to `app/backend/`, went to the Recycle Bin (not by the agent). Git shows the two `app/agent/` files as deleted, not committed. **Open:** owner decides whether to commit the deletion or restore.
+- `app/` (v1 notes) deleted with owner approval, 2026-11-06. Its user flow is recorded in `docs/process-design/process-map.md`.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
   - Tech spec v3 + ADR-0008/0009: `docs/process-design/`, `docs/adr/`

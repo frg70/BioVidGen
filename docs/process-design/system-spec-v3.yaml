@@ -107,7 +107,7 @@ map_deltas:
   - {item: "OP4 actor", map_said: "single op", spec_decides: "DOM part in content script, rest in side panel; one owner SVC3", reason: "DOM only reachable in page context"}
   - {item: "OP5 retry", map_said: "2x", spec_decides: "2x per provider then next provider once", reason: "quota errors are provider-specific"}
   - {item: "View IDs", map_said: "VW-A..E (v2)", spec_decides: "VW1..VW7", reason: "stable IDs for stage 3"}
-  - {item: "app/agent/main.py, ocr.py", map_said: "v1 server stub", spec_decides: "keep as notes until P0 skeleton, then move to docs [owner approval]", reason: "records original user flow"}
+  - {item: "app/agent/main.py, ocr.py", map_said: "v1 server stub", spec_decides: "deleted with owner approval, 2026-11-06; flow recorded in process-map.md", reason: "records original user flow"}
 
 plan:
   phases:

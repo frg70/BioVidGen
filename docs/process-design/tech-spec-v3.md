@@ -234,7 +234,7 @@ NLP / TRAINABLE ML: not present.
 | OP12 metric "flags_p95" | ≤2 s | kept; batch filter call ≤100 DOIs + 24 h cache | — |
 | OP5 retry | 2× | 2× within provider, then next provider in chain (once) | quota errors are provider-specific |
 | VW numbering | VW-A…E (v2) | VW1…VW7 | stable IDs for stage 3 |
-| `app/agent/main.py`, `ocr.py` | v1 server stub | not part of v3 layout; keep as notes until P0 skeleton lands, then move notes to docs and delete `[specify: owner approval]` | Chesterton: they record the original user flow |
+| `app/agent/main.py`, `ocr.py` | v1 server stub | deleted with owner approval, 2026-11-06; the flow they recorded is in `process-map.md` | Chesterton: they record the original user flow |
 
 Open questions (carried from map Q1–Q10, plus): Q11 lint/boundary tool choice and Dexie/zod-to-json-schema licences (verify) · Q12 adjudicator identity for OP11 · Q13 which pilot instrument measures minutes per article (observed vs self-timed).
 
