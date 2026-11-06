@@ -330,6 +330,13 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP1-UNIT-26 | UNIT | no content script | site off the list → no page, panel usable | PR |
 | OP1-UNIT-27 | UNIT | JSON-LD | identifier forms, `@type` arrays, `@graph`; invalid JSON ignored | PR |
 | OP1-UNIT-28 | UNIT | reference trap | cited DOI first in the body, own DOI in meta → own DOI | PR |
+| OP1-UNIT-29 | UNIT | manual DOI input | DOI, doi.org link or publisher link accepted; version kept apart; other text and markup → null | PR |
+| OP1-UNIT-30 | UNIT | manual DOI on a site off the list | shown with `doiSource:"manual"`; invalid input changes nothing | PR |
+| OP1-UNIT-31 | UNIT | manual DOI never carries over | navigation and tab changes clear it, including between two pages off the list | PR |
+| OP1-UNIT-32 | UNIT | manual DOI on a listed page without one | page title stays; a later result with no DOI cannot erase it; the page's own DOI wins | PR |
+| OP1-UNIT-33 | UNIT | change the manual DOI | back to what the page gave | PR |
+| OP1-E2E-04 | E2E | journal off the list | type DOI → shown as unchecked; wrong input explained; gone on the next page; nothing sent | PR |
+| OP1-A11Y-02 | A11Y | manual DOI form | labelled, keyboard operable, error announced and linked, focus moves to the header and back to the field | PR |
 
 ### OP3 · Resolve metadata (DETERMINISTIC)
 | ID | Type | Variant | Given → Expected | Gate |

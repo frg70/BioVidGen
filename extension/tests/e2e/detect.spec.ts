@@ -70,6 +70,64 @@ test('OP1-E2E-03 OP1-A11Y-01 ambiguous page: keyboard-operable picker, chosen DO
   await expect(panel.getByRole('heading', { level: 2 })).toBeFocused();
 });
 
+test('OP1-E2E-04 OP1-A11Y-02 journal off the list: DOI typed by keyboard, wrong input explained, gone on the next page, sent nowhere', async ({ context, extensionId, pages, egress }) => {
+  const HOST = 'https://fixtures.biovidgen.test';
+  pages.set('/revista/uno', '<!doctype html><title>Revista regional</title>');
+  pages.set('/revista/dos', '<!doctype html><title>Otra revista</title>');
+  const panel = await openPanel(context, extensionId);
+  const paper = await openPaper(context, `${HOST}/revista/uno`);
+
+  const input = panel.getByRole('textbox', { name: '¿Conoces el DOI? Escríbelo o pégalo aquí' });
+  await expect(input).toBeVisible();
+
+  await input.fill('vitamina d');
+  await input.press('Enter');
+  await expect(panel.getByRole('alert')).toHaveText('Eso no parece un DOI. Ejemplo: 10.1234/abcd');
+  await expect(input).toHaveAttribute('aria-invalid', 'true');
+  await expect(input).toBeFocused();
+
+  await input.fill('https://doi.org/10.21149/11234');
+  await input.press('Enter');
+  await expect(panel.locator('dd', { hasText: '10.21149/11234' })).toBeVisible();
+  await expect(panel.getByText('Escrito por ti; todavía no se ha comprobado.')).toBeVisible();
+  await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Artículo indicado por ti');
+  await expect(panel.getByRole('heading', { level: 2 })).toBeFocused();
+
+  await panel.getByRole('button', { name: 'Cambiar DOI' }).press('Enter');
+  await expect(input).toBeFocused();
+  await expect(input).toHaveValue('');
+  await expect(panel.locator('dd')).toHaveCount(0);
+
+  await input.fill('10.21149/11234');
+  await input.press('Enter');
+  await expect(panel.locator('dd', { hasText: '10.21149/11234' })).toBeVisible();
+
+  await paper.goto(`${HOST}/revista/dos`); // same tab, next page: the wrong paper must not stay on screen
+  await expect(panel.locator('dd')).toHaveCount(0);
+  await expect(panel.getByRole('textbox')).toHaveValue('');
+
+  const sent = egress.filter((r) => !r.url.startsWith('chrome-extension:') && !r.url.startsWith(HOST) && r.url !== 'about:blank');
+  expect(sent.map((r) => r.url)).toEqual([]);
+  expect(egress.some((r) => r.url.includes('11234') || (r.postData ?? '').includes('11234'))).toBe(false);
+});
+
+test('OP1-UNIT-32 listed page with no DOI, or none of the offered DOIs is right: the student can type it', async ({ context, extensionId, sites }) => {
+  const url = `${ON_SITE}/sin-doi`;
+  sites.set(url, '<!doctype html><head><meta name="citation_title" content="Artículo sin DOI"></head><body></body>');
+  const ambiguous = `${ON_SITE}/varios`;
+  sites.set(ambiguous, '<!doctype html><head><meta property="og:type" content="article"><meta property="og:title" content="Dudoso"></head><body><div class="abstract">10.1000/one 10.1000/two</div></body>');
+  const panel = await openPanel(context, extensionId);
+  const paper = await openPaper(context, url);
+  await panel.getByRole('textbox').fill('10.1234/abc');
+  await panel.getByRole('textbox').press('Enter');
+  await expect(panel.getByRole('heading', { level: 2 })).toHaveText('Artículo sin DOI');
+  await expect(panel.locator('dd', { hasText: '10.1234/abc' })).toBeVisible();
+
+  await paper.goto(ambiguous);
+  await expect(panel.getByRole('button', { name: '10.1000/one' })).toBeVisible();
+  await expect(panel.getByRole('textbox')).toBeVisible();
+});
+
 test('OP1-UNIT-10 a DOI found only in page text is confirmed by the student, not shown as fact', async ({ context, extensionId, sites }) => {
   const url = `${ON_SITE}/one-doi`;
   sites.set(url, '<!doctype html><body><article><header><h1>Un artículo</h1><p>10.1000/only.one</p></header></article></body>');

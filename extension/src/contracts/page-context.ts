@@ -17,7 +17,7 @@ export const CANDIDATES_MAX = 5;
 export const RESULT_IDS_MAX = 200;
 
 export const PageKindSchema = z.enum(['article', 'result_list', 'other']);
-export const DoiSourceSchema = z.enum(['meta', 'jsonld', 'url', 'site_rule', 'regex']);
+export const DoiSourceSchema = z.enum(['meta', 'jsonld', 'url', 'site_rule', 'regex', 'manual']);
 export type DoiSource = z.infer<typeof DoiSourceSchema>;
 export const DetectNoteSchema = z.enum(['META_CONFLICT', 'URL_MISMATCH', 'DETECT_ERROR']);
 export type DetectNote = z.infer<typeof DetectNoteSchema>;

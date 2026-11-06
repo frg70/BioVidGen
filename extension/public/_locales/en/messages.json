@@ -13,5 +13,11 @@
   "panelPmcid": { "message": "PMCID" },
   "panelPick": { "message": "We found these DOIs. Which one is this article?" },
   "panelNoId": { "message": "No identifier was found on this page." },
-  "panelList": { "message": "Result list: $COUNT$ articles.","placeholders": { "COUNT": { "content": "$1" }}}
+  "panelList": { "message": "Result list: $COUNT$ articles.","placeholders": { "COUNT": { "content": "$1" }}},
+  "panelManualLabel": { "message": "Know the DOI? Type or paste it here" },
+  "panelManualSubmit": { "message": "Use this DOI" },
+  "panelManualInvalid": { "message": "That doesn't look like a DOI. Example: 10.1234/abcd" },
+  "panelManualTitle": { "message": "Article you entered" },
+  "panelManualNote": { "message": "Entered by you; not checked yet." },
+  "panelManualChange": { "message": "Change DOI" }
 }

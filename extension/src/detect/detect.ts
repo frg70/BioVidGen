@@ -101,6 +101,15 @@ export function doiFromUrl(url: URL): { doi: string; version: number | null } | 
   return doi ? splitVersion(doi) : null;
 }
 
+/** What a student pastes into the panel: a DOI, a doi.org link or a publisher's link. */
+export function parseManualDoi(raw: string): { doi: string; version: number | null } | null {
+  const text = raw.trim();
+  const doi = normalizeDoi(text);
+  if (doi) return splitVersion(doi);
+  if (!/^https?:\/\//i.test(text) || !URL.canParse(text)) return null;
+  return doiFromUrl(new URL(text));
+}
+
 const SCHOLARLY_TYPES = new Set(['scholarlyarticle', 'medicalscholarlyarticle']);
 const JSONLD_SCRIPTS_MAX = 5;
 const JSONLD_CHARS_MAX = 200_000;

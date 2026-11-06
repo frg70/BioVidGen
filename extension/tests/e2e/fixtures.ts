@@ -50,7 +50,7 @@ export const test = base.extend<{
       const url = new URL(route.request().url());
       if (url.protocol === 'chrome-extension:') return route.continue();
       const recorded = sites.get(url.href);
-      if (recorded !== undefined) return route.fulfill({ status: 200, contentType: 'text/html', body: recorded });
+      if (recorded !== undefined) return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: recorded });
       if (url.host === FIXTURE_HOST) {
         const html = pages.get(url.pathname);
         return html === undefined ? route.fulfill({ status: 404, body: '' }) : route.fulfill({ status: 200, contentType: 'text/html', body: html });

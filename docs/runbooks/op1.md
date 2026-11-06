@@ -8,8 +8,10 @@ Order of sources: `citation_doi`, `dc.identifier`, `prism.doi`, JSON-LD, the URL
 ## Symptoms
 | Symptom | Likely cause | What to do |
 |---|---|---|
-| Panel stays on the empty state on a site | Site is not in `sites.json` (expected, see ADR-0011), or the page has no identifier | Check the list. Adding a site is Type 1: Chrome asks existing users to re-approve |
-| "No se encontró un identificador" | Page has a citation title but no DOI, as on some Redalyc articles | Correct behaviour. Manual DOI entry is planned |
+| Panel stays on the empty state on a site | Site is not in `sites.json` (expected, see ADR-0011), or the page has no identifier | The student can type the DOI in the panel. Adding a site is Type 1: Chrome asks existing users to re-approve |
+| A typed DOI disappeared | The student navigated or changed tab. Deliberate: it must never stay on screen for another page | Type it again |
+| Many `doiSource.manual` entries in the log | Students often read journals off the list | Input for the ADR-0011 revisit question |
+| "No se encontró un identificador" | Page has a citation title but no DOI, as on some Redalyc articles | Correct behaviour. The student can type the DOI |
 | Wrong paper shown | Real bug: stop and investigate. Check the page's `citation_doi` first, then the log's `doiSource` | Add the page as a fixture with a test before fixing |
 | `errorCode: META_CONFLICT` in Diagnostics | Page has two different `citation_doi` tags; the first wins | Check that page by hand |
 | `errorCode: URL_MISMATCH` | Page's meta DOI differs from the DOI in its URL; meta wins | Usually harmless (redirects). Review if it repeats on one site |

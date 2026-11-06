@@ -42,11 +42,11 @@ Good:
 
 Bad:
 - The install dialog gains a site-access warning.
-- **Journals off the list get no detection.** This is the main gap, and it matters for regional journals. Manual DOI entry (OP3 / VW1) is the planned answer.
+- **Journals off the list get no automatic detection.** This matters for regional journals. The student can type or paste the DOI in the panel (delta D33): no permission needed, and the page is still never read. It costs a step, and the DOI stays unchecked until OP3 exists.
 - Adding a host later makes Chrome ask existing users to re-approve, so the list should change rarely.
 - The content script runs in hostile pages. It must stay unprivileged: no settings, no keys, no network.
 - Detection loads 101 KB of script on listed pages, mostly Zod (no budget set; revisit if page load suffers).
 
 ## Revisit when
-- Fixtures or pilot use show a large share of papers read outside the list.
+- Fixtures or pilot use show a large share of papers read outside the list. The local log counts typed DOIs (`doiSource.manual`), which measures this.
 - Someone wants on-click again. **Untested alternative:** turn `openPanelOnActionClick` off and call `chrome.sidePanel.open()` from `action.onClicked`, where an `activeTab` grant is documented. It needs a new spike and the owner's approval, since it adds two permissions.

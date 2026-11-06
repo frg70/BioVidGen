@@ -11,10 +11,11 @@ import { PaperView } from './paper';
 
 // Composition root. IndexedDB failure falls back to memory-only logging (SVC0 plan §7);
 // the banner for that state belongs to VW1.
-async function boot() {
-  const root = document.getElementById('app');
-  if (root) render(<PaperView state={{ tabId: null, page: null }} />, root);
+const root = document.getElementById('app');
+const noActions = { onEnterDoi: () => false, onClearDoi: () => undefined };
+if (root) render(<PaperView state={{ tabId: null, page: null, navigation: 0 }} {...noActions} />, root);
 
+async function boot() {
   const db = await openDb();
   if (db.ok) await requestPersistence();
   const log = createLogger(db.ok ? createDbLogSink(db.value) : createMemorySink());
@@ -34,7 +35,7 @@ async function boot() {
     request: (tabId) => messaging.sendToTab(GetPageContext, tabId, {}),
     log,
     onChange: (state) => {
-      if (root) render(<PaperView state={state} />, root);
+      if (root) render(<PaperView state={state} onEnterDoi={(raw) => tracker.enterDoi(raw)} onClearDoi={() => tracker.clearManual()} />, root);
     },
   });
   messaging.handle(

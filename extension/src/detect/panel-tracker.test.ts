@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { DetectedPage } from '../contracts/page-context';
+import { PageContextSchema, type DetectedPage } from '../contracts/page-context';
 import { createLogger, createMemorySink } from '../core/log';
 import { err, ok } from '../core/result';
 import { emptyPage } from './detect';
@@ -135,5 +135,79 @@ describe('OP1 panel tracker', () => {
     const { tracker, last } = await setup(async () => ok(detection('10.1000/a')));
     expect(tracker.accept({ ...detection('10.1000/old', 9), page: { ...page('10.1000/old'), schemaVersion: 2 } } as unknown as Detection, 7)).toBe(false);
     expect(last().page?.doi).toBe('10.1000/a');
+  });
+
+  const offList = () => setup(async () => err('NO_RECEIVER'));
+
+  it('OP1-UNIT-30 manual DOI on a site off the list: shown as typed by the student, tab id from Chrome, valid contract', async () => {
+    const { tracker, last } = await offList();
+    expect(tracker.enterDoi('https://doi.org/10.1234/ABC')).toBe(true);
+    expect(last().page).toMatchObject({ tabId: 7, kind: 'article', doi: '10.1234/abc', doiSource: 'manual', candidates: [] });
+    expect(PageContextSchema.safeParse(last().page).success).toBe(true);
+  });
+
+  it('OP1-UNIT-30 invalid input is refused and changes nothing', async () => {
+    const { tracker, last, states } = await offList();
+    const before = states.length;
+    for (const raw of ['', 'vitamina d', '10.1234/<b>x</b>']) expect(tracker.enterDoi(raw), raw).toBe(false);
+    expect(states.length).toBe(before);
+    expect(last().page).toBeNull();
+  });
+
+  it('OP1-UNIT-31 a typed DOI never carries over: navigation and tab changes clear it and change the navigation counter', async () => {
+    const { tracker, tabs, last } = await offList();
+    tracker.enterDoi('10.1234/abc');
+    const { navigation } = last();
+    tabs.update(7, 'loading');
+    expect(last().page).toBeNull();
+    expect(last().navigation).toBeGreaterThan(navigation);
+    tabs.update(7, 'complete');
+    await flush();
+    expect(last().page).toBeNull();
+
+    tracker.enterDoi('10.1234/abc');
+    const second = last().navigation;
+    tabs.activate(8);
+    await flush();
+    expect(last()).toMatchObject({ tabId: 8, page: null });
+    expect(last().navigation).toBeGreaterThan(second);
+  });
+
+  it('OP1-UNIT-32 on a listed page with no DOI: the page title stays; a later result with no DOI cannot erase the typed one', async () => {
+    const { tracker, tabs, last } = await setup(async () => ok(detection(null, 1, { kind: 'article', title: 'Artículo de Redalyc' })));
+    tracker.enterDoi('10.1234/abc');
+    expect(last().page).toMatchObject({ title: 'Artículo de Redalyc', doi: '10.1234/abc', doiSource: 'manual' });
+
+    expect(tracker.accept(detection(null, 2, { kind: 'article', title: 'Artículo de Redalyc' }), 7)).toBe(false);
+    tabs.update(7, 'complete'); // the load finishing after the student typed
+    await flush();
+    expect(last().page?.doi).toBe('10.1234/abc');
+
+    expect(tracker.accept(detection('10.1000/from.page', 3), 7)).toBe(true); // the page's own metadata wins
+    expect(last().page).toMatchObject({ doi: '10.1000/from.page', doiSource: 'meta' });
+  });
+
+  it('OP1-UNIT-33 change the typed DOI: back to what the page gave, including anything detected meanwhile', async () => {
+    const { tracker, last } = await setup(async () => ok(detection(null, 1, { kind: 'article', title: 'Antes' })));
+    tracker.enterDoi('10.1234/abc');
+    tracker.accept(detection(null, 2, { kind: 'article', title: 'Después' }), 7);
+    tracker.clearManual();
+    expect(last().page).toMatchObject({ title: 'Después', doi: null, doiSource: null });
+
+    const off = await offList();
+    off.tracker.enterDoi('10.1234/abc');
+    off.tracker.clearManual();
+    expect(off.last().page).toBeNull();
+    off.tracker.clearManual(); // nothing typed: no effect
+    expect(off.last().page).toBeNull();
+  });
+
+  it('OP1-OBS-01 a typed DOI logs its source for the ADR-0011 coverage question, never the DOI', async () => {
+    const { tracker, sink } = await offList();
+    tracker.enterDoi('10.1234/abc');
+    const entries = await sink.list();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]).toMatchObject({ op: 'OP1', outcome: 'ok', sizes: { 'doiSource.manual': 1 } });
+    expect(JSON.stringify(entries)).not.toContain('10.1234');
   });
 });

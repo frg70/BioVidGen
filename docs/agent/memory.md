@@ -32,7 +32,8 @@ Update this file at the end of every working session, in the same PR as the work
   - content script on 14 publishers (ADR-0011, site list only); side panel shows title, DOI, version, PMID, PMCID, or asks when unsure;
   - 139 unit tests, 19 e2e; catalog OP1 53/58 (open: HYP-01..03 spike, VAL-01 needs OP3, MUT-01 needs a tool);
   - fixture suite 11/11 labelled DOIs returned correctly, 0 wrong papers (16 fixtures: 12 real metadata captures, 4 synthetic);
-  - p95 9.2 ms on 60k nodes + 200 metas (headless; target 50 ms).
+  - p95 9.2 ms on 60k nodes + 200 metas (headless; target 50 ms);
+  - manual DOI entry for pages with no usable DOI, on or off the list (D33, no new permission). Unchecked until OP3.
 - [ ] **Next: OP5V port to Python** (ADR-0010 step 2), test-first. Vectors: `extension/fixtures/op5v/`, the TS adversarial cases. Add hypothesis (dev). Mutation run with mutmut.
 - [ ] Then ADR-0010 step 3: extension client (pairing UI, "backend off" state, rule 1/2 updates).
 - [ ] OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.

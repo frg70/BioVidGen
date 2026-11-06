@@ -4,7 +4,7 @@ import fc from 'fast-check';
 import { JSDOM } from 'jsdom';
 import { describe, expect, it } from 'vitest';
 import { DetectedPageSchema, DOI_PATTERN } from '../contracts/page-context';
-import { detectPaper, doiFromUrl, DEFAULT_RULES, normalizeDoi, safeDetect } from './detect';
+import { detectPaper, doiFromUrl, DEFAULT_RULES, normalizeDoi, parseManualDoi, safeDetect } from './detect';
 import sites from './sites.json';
 
 const ROOT = join(import.meta.dirname, '..', '..', 'fixtures', 'pages');
@@ -81,6 +81,19 @@ describe('OP1 normalizeDoi', () => {
       }),
       { numRuns: 2000, seed: 20261105 },
     );
+  });
+});
+
+describe('OP1 parseManualDoi', () => {
+  it('OP1-UNIT-29 what a student pastes: a DOI, a doi.org link or a publisher link; the version is kept apart', () => {
+    for (const raw of ['10.1234/ABC', ' doi:10.1234/abc ', 'https://doi.org/10.1234/abc', 'https://www.revista.example/doi/full/10.1234/abc', 'https://www.revista.example/articles/10.1234/abc/full']) {
+      expect(parseManualDoi(raw), raw).toEqual({ doi: '10.1234/abc', version: null });
+    }
+    expect(parseManualDoi('https://www.biorxiv.org/content/10.1101/2020.02.07.937862v2.full')).toEqual({ doi: '10.1101/2020.02.07.937862', version: 2 });
+    expect(parseManualDoi('10.1101/2020.02.07.937862v2')).toEqual({ doi: '10.1101/2020.02.07.937862', version: 2 });
+    for (const raw of ['', '   ', 'vitamina d', '32250385', 'https://www.revista.example/articulo/55', '10.1234/<script>alert(1)</script>', 'javascript:alert(1)', `10.1234/${'a'.repeat(300)}`]) {
+      expect(parseManualDoi(raw), raw).toBeNull();
+    }
   });
 });
 
