@@ -283,24 +283,24 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP1-UNIT-05 | UNIT | meta vs URL disagree | meta wins, logged | PR |
 | OP1-UNIT-06 | UNIT | PMID only (PubMed abstract page) | `pmid` set; doi from meta if present else null; kind article | PR |
 | OP1-UNIT-07 | UNIT | PMCID page | `pmcid` set | PR |
-| OP1-UNIT-08 | UNIT | arXiv/bioRxiv page with version suffix | DOI without `v2` suffix; version noted [decide] | PR |
+| OP1-UNIT-08 | UNIT | arXiv/bioRxiv/openRxiv page with version suffix | DOI without `v2` suffix, number kept in `version` (owner, 2026-11-05); other DOIs ending in `v2` untouched | PR |
 | OP1-UNIT-09 | UNIT | retraction-notice page itself | detected as article with DOI of the notice (OP12 handles notice type) | PR |
 | OP1-UNIT-10 | UNIT | body single DOI, no meta | `doiSource:"regex"` | PR |
 | OP1-UNIT-11 | UNIT | body many DOIs, no meta | `doi:null`, candidates ≤5 in order; references excluded | PR |
 | OP1-UNIT-12 | UNIT | non-article page (news, blog, Google home) | `kind:"other"` | PR |
 | OP1-UNIT-13 | UNIT | PubMed / Europe PMC result lists | `kind:"result_list"`, ids typed pmid/doi | PR |
-| OP1-UNIT-14 | UNIT | Google Scholar list | [decide: supported in v1?] ids extracted or `kind:"other"` | PR |
+| OP1-UNIT-14 | UNIT | Google Scholar list | not supported in v1 (D-T7): `kind:"other"`, not on the match list | PR |
 | OP1-UNIT-15 | UNIT | AMP / mobile / print views | DOI still detected or `other` (no wrong DOI) | PR |
 | OP1-UNIT-16 | UNIT | content inside iframes | top frame only in v1; no detection from ad iframes | PR |
-| OP1-UNIT-17 | UNIT | PDF opened in Chrome's built-in viewer | content script cannot run; detection from URL (doi in URL) or `other` + manual DOI box | PR (e2e) |
-| OP1-UNIT-18 | UNIT | `file://` pages | ignored unless user grants file access [decide] | PR |
-| OP1-PROP-01 | PROP | invariant | `kind==="article"` ⇒ doi ∨ pmid ∨ title | PR |
+| OP1-UNIT-17 | UNIT | PDF opened in Chrome's built-in viewer | content script runs (Chrome 156, 2026-11-05); detection from URL or `other`. Manual DOI box deferred (D32) | PR (e2e) |
+| OP1-UNIT-18 | UNIT | `file://` pages | not on the match list (D-T7) | PR |
+| OP1-PROP-01 | PROP | invariant | `kind==="article"` ⇒ doi ∨ pmid ∨ pmcid ∨ title (D30) | PR |
 | OP1-PROP-02 | PROP | idempotency | detect twice on same DOM → deep-equal | PR |
 | OP1-TYPE-01 | TYPE | schema | output parses `PageContextSchema`; `doi:null` vs `candidates:[]` semantics | PR |
 | OP1-CON-01 | CON | consumer OP3 | every non-null doi matches OP3 input regex | PR |
 | OP1-SEC-01 | SEC | no network in bundle | detect bundle has no fetch/XHR/WebSocket | PR |
 | OP1-SEC-02 | SEC | hostile meta | `citation_doi` with markup/JS → rejected | PR |
-| OP1-SEC-03 | SEC | length caps | url 2048, doi 256, title 1000, keywords 50×100 → truncated + flag | PR |
+| OP1-SEC-03 | SEC | length caps | url 2048, title 1000, keywords 50×100 → truncated + flag; doi >256 → rejected + flag (D29) | PR |
 | OP1-SEC-04 | SEC | spoofed messages | page posts fake `PaperDetected` → ignored | PR |
 | OP1-FUZZ-01 | FUZZ | random DOM/meta | 10k generated documents: no throw, ≤50 ms each | NIGHT |
 | OP1-PERF-01 | PERF | 60k nodes, 200 meta | p95 ≤50 ms | PR |
@@ -322,6 +322,14 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP1-CFG-01 | CFG | sites.json | schema-valid; every entry has ≥1 fixture; regexes compile and pass safe-regex (no catastrophic backtracking) | PR |
 | OP1-OBS-01 | OBS | log entry | `{op:"OP1", durationMs, outcome, doiSource}`; no page text, no full URL path | PR |
 | OP1-A11Y-01 | A11Y | candidate picker | keyboard operable, labelled, focus returns to header after choice | PR |
+| OP1-UNIT-21 | UNIT | throttle | 10 DOM mutations within 500 ms → 1 run | PR |
+| OP1-UNIT-22 | UNIT | late results | an older `seq` for the tab is dropped | PR |
+| OP1-UNIT-23 | UNIT | tab switch | panel shows the new tab; a slow reply from the old tab cannot overwrite it | PR |
+| OP1-UNIT-24 | UNIT | other window | a tab activated in another window is ignored | PR |
+| OP1-UNIT-25 | UNIT | navigation | old paper cleared when the tab starts loading, then re-detected | PR |
+| OP1-UNIT-26 | UNIT | no content script | site off the list → no page, panel usable | PR |
+| OP1-UNIT-27 | UNIT | JSON-LD | identifier forms, `@type` arrays, `@graph`; invalid JSON ignored | PR |
+| OP1-UNIT-28 | UNIT | reference trap | cited DOI first in the body, own DOI in meta → own DOI | PR |
 
 ### OP3 · Resolve metadata (DETERMINISTIC)
 | ID | Type | Variant | Given → Expected | Gate |
@@ -756,7 +764,7 @@ Statistical hygiene for all KPI tests: pre-register thresholds and analysis in `
 | # | Decision | Tests blocked | Suggested default |
 |---|---|---|---|
 | D-T1 | Collapsed/accordion content: include (risk: hidden-text injection) or exclude (risk: missing real sections)? | OP4-UNIT-08, OP4-SEC-01 | include `<details>` and `aria-expanded` regions, exclude CSS-hidden; mark sections from collapsed regions |
-| D-T2 | PDFs opened in Chrome's built-in viewer (content scripts cannot run) | OP1-UNIT-17, OP4 P2 | URL-based DOI + "abrir como texto" via pdf.js with runtime permission |
+| D-T2 | **Resolved 2026-11-05:** content scripts do run in Chrome's PDF viewer (Chrome 156); DOI comes from the URL. Was: PDFs opened in Chrome's built-in viewer | OP1-UNIT-17, OP4 P2 | URL-based DOI + "abrir como texto" via pdf.js with runtime permission |
 | D-T3 | PubMed lists give PMIDs, not DOIs | OP12-UNIT-15 | OpenAlex `pmid` filter [verify in S3] |
 | D-T4 | "Retraction and replacement", withdrawn preprints | OP12-UNIT-10/11 | show as retraction-class chip with specific text |
 | D-T5 | Wrong-language model output | OP5-UNIT-07 | one retry, then no_verificado |

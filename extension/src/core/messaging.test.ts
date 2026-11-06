@@ -29,6 +29,28 @@ function fakeRuntime(defaultSender: SenderLike = PANEL) {
 const Ping = defineMessage('test.ping', z.strictObject({ n: z.number().int() }), z.strictObject({ doubled: z.number() }));
 
 describe('core/messaging', () => {
+  it('OP1-INT-01 sendToTab: panel to one tab, validated both ways; no content script gives NO_RECEIVER', async () => {
+    const sent: [number, unknown][] = [];
+    const { runtime } = fakeRuntime();
+    const reply = { ok: true, value: { doubled: 4 } };
+    const m = createMessaging(runtime, {
+      tabs: {
+        sendMessage: async (tabId, message) => {
+          sent.push([tabId, message]);
+          if (tabId === 1) return reply;
+          if (tabId === 2) return { ok: true, value: { doubled: 'x' } };
+          throw new Error('Could not establish connection. Receiving end does not exist.');
+        },
+      },
+    });
+    expect(await m.sendToTab(Ping, 1, { n: 2 })).toEqual(ok({ doubled: 4 }));
+    expect(sent[0]).toEqual([1, { v: 1, name: 'test.ping', payload: { n: 2 } }]);
+    expect(await m.sendToTab(Ping, 2, { n: 2 })).toEqual(err('BAD_RESPONSE'));
+    expect(await m.sendToTab(Ping, 3, { n: 2 })).toEqual(err('NO_RECEIVER'));
+    expect(await m.sendToTab(Ping, 1, { n: 'x' } as never)).toEqual(err('BAD_MESSAGE'));
+    expect(await createMessaging(runtime).sendToTab(Ping, 1, { n: 2 })).toEqual(err('NO_RECEIVER'));
+  });
+
   it('SVC0-UNIT-14 round trip: validated request reaches the handler and the reply is typed', async () => {
     const { runtime } = fakeRuntime();
     const m = createMessaging(runtime);

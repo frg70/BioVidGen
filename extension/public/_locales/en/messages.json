@@ -5,5 +5,13 @@
   "panelTitle": { "message": "BioVidGen" },
   "panelEmpty": { "message": "Open a scientific article to see its details here." },
   "optionsTitle": { "message": "BioVidGen options" },
-  "optionsEmpty": { "message": "No settings yet." }
+  "optionsEmpty": { "message": "No settings yet." },
+  "panelUntitled": { "message": "Untitled article detected" },
+  "panelDoi": { "message": "DOI" },
+  "panelVersion": { "message": "Preprint version" },
+  "panelPmid": { "message": "PMID" },
+  "panelPmcid": { "message": "PMCID" },
+  "panelPick": { "message": "We found these DOIs. Which one is this article?" },
+  "panelNoId": { "message": "No identifier was found on this page." },
+  "panelList": { "message": "Result list: $COUNT$ articles.","placeholders": { "COUNT": { "content": "$1" }}}
 }

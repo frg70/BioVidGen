@@ -59,6 +59,8 @@ Checked 2026-11-05 with `npm view <pkg> version license` (npm registry metadata 
 | typescript | 6.0.3 | Apache-2.0 ✅ | dev | type checking | 7.0.2 is latest, but typescript-eslint 8.72 requires `<6.1.0` |
 | vitest | 5.1.0 | MIT ✅ | dev | unit / property / integration tests | |
 | fast-check | 4.10.2 | MIT ✅ | dev | property tests | |
+| jsdom | 31.0.0 | MIT ✅ | dev | DOM for OP1 unit tests (added 2026-11-05) | real-browser behaviour stays in Playwright |
+| @types/jsdom | 30.0.0 | MIT ✅ | dev | types for jsdom (added 2026-11-05) | |
 | msw | 3.0.3 | MIT ✅ | dev | HTTP mocking for client tests (OP3+) | installed now, first used by scholarly clients |
 | fake-indexeddb | 6.2.7 | Apache-2.0 ✅ | dev | IndexedDB in Node tests | |
 | @playwright/test | 1.64.1 | Apache-2.0 ✅ | dev | e2e in bundled Chromium (headless via `channel: 'chromium'`) | browsers downloaded by `npx playwright install chromium` |

@@ -6,7 +6,7 @@ Update this file at the end of every working session, in the same PR as the work
 
 ## Status
 - **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
-- **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton`.
+- **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton` → `feat/op1-detect-paper`.
 - `app/agent/` (owner's working tree renames it `app/backend/`, uncommitted) holds v1 notes only; the new backend is `backend/`.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
@@ -28,9 +28,14 @@ Update this file at the end of every working session, in the same PR as the work
   - FastAPI on 127.0.0.1; pairing token; Host/Origin/CORS/body-size checks; SQLite with migrations; log ring with runId;
   - licence gate; CI job `backend`;
   - 17/17 pytest, ruff clean, licence gate 25 packages; smoke run OK.
+- [x] **OP1 Detect paper** on `feat/op1-detect-paper` (owner moved it ahead of the OP5V port, 2026-11-05):
+  - content script on 14 publishers (ADR-0011, site list only); side panel shows title, DOI, version, PMID, PMCID, or asks when unsure;
+  - 139 unit tests, 19 e2e; catalog OP1 53/58 (open: HYP-01..03 spike, VAL-01 needs OP3, MUT-01 needs a tool);
+  - fixture suite 11/11 labelled DOIs returned correctly, 0 wrong papers (16 fixtures: 12 real metadata captures, 4 synthetic);
+  - p95 9.2 ms on 60k nodes + 200 metas (headless; target 50 ms).
 - [ ] **Next: OP5V port to Python** (ADR-0010 step 2), test-first. Vectors: `extension/fixtures/op5v/`, the TS adversarial cases. Add hypothesis (dev). Mutation run with mutmut.
 - [ ] Then ADR-0010 step 3: extension client (pairing UI, "backend off" state, rule 1/2 updates).
-- [ ] OP1 Detect → OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
+- [ ] OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
   - one paper flows from detection to export on 3 publishers;
@@ -72,7 +77,11 @@ Format: fact (date, source).
 - PyMuPDF is AGPL → rejected. pypdfium2, pypdf and pdfminer.six are permissive. (2026-10-08, PyPI)
 - Health-science enrolment in Mexico 2023-24: 1,291,096 (ANUIES, 🟡).
 - Prefix `10.1101` is shared by bioRxiv/medRxiv and Cold Spring Harbor journals (e.g., Genome Research), so the preprint rule must use DOI patterns. (design finding)
-- Chrome's built-in PDF viewer does not run content scripts. (design finding; confirm in e2e)
+- Chrome's built-in PDF viewer **does** run content scripts: the PLOS PDF showed its DOI. Some publishers (Frontiers, MDPI) send PDFs as downloads, so nothing runs. (2026-11-05, Chrome 156; corrects the earlier design finding)
+- A toolbar click does **not** grant `activeTab` while `openPanelOnActionClick` is on (refused before and after the click). `tab.url` stays hidden with `content_scripts` access alone. (2026-11-05, Chrome 156)
+- Real pages, 2026-11-05: `citation_doi` on all 8 articles whose page loaded with metadata (H1 sample, plan wants 60). More than one distinct DOI in the body on all 8, up to 91 (H3). Forms seen: `DC.Identifier`, `doi:10…`, `og:type=Article`, `@type` arrays. Europe PMC has no paper metadata in its head.
+- Prefix 10.64898 belongs to openRxiv. (2026-11-05, Crossref API)
+- biomedcentral.com redirects to link.springer.com. (2026-11-05)
 - PubMed result lists expose PMIDs, not DOIs. (design finding)
 
 **Still `[verify]`:**
@@ -93,6 +102,7 @@ Format: fact (date, source).
 | 0007 | Proposed (pending S1, S2, S5) | Free-first, pluggable LLM: Nano → Ollama → bring-your-own key. |
 | 0008 | Proposed | Expert-written (concierge) summaries + blind test vs ChatGPT gate the LLM build. Fail → verifier pivot. |
 | 0009 | Proposed (pending S6) | Build OP12 ourselves; Citicious as reference only. |
+| 0011 | **Accepted** 2026-11-05 | Paper detection reads only a fixed list of 14 publishers. On-click access failed its Chrome test and is out. |
 | 0010 | **Accepted** 2026-11-05 | One local Python backend (FastAPI + SQLite, 127.0.0.1) shared by the extension (thin client) and a local web app. Amends 0006. |
 | 0001, 0002 | Superseded by 0006 | |
 | 0005 | Withdrawn | |
@@ -143,9 +153,14 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: Windows `process.cpuUsage()` ticks at ~15.6 ms; useless for a 20 ms budget.
 - 2026-11-05: PowerShell 5.1 `Set-Content -Encoding utf8` and here-strings piped to `git commit -F -` break commit messages (BOM, args). Write the message file with the editor tool, then `git commit -F <file>`.
 - 2026-11-05: Windows: killing `uv run biovidgen` leaves the Python child holding the port; a second start fails to bind while clients keep reaching the old server (old token, so 401). Kill the tree (`taskkill /T`). Packaging (ADR-0010 step 5) needs single-instance detection and a real stop command.
+- 2026-11-05: In Playwright the panel page stands in for the side panel: never `bringToFront()` it, or it becomes the active tab and the tracker follows it.
+- 2026-11-05: Processes started from an agent session die with it. Create long-lived test windows through WMI (`Win32_Process.Create`). Clear stale flag files before a UI Automation run.
+- 2026-11-05: `npm audit` reports 10 moderate findings in the eslint dev chain (minimatch via `@eslint/config-array`); runtime is clean. Not force-fixed: `--force` changes major versions.
+- 2026-11-05: OP5V-PERF-01 and the FUZZ tests are limited by time and fail under heavy CPU load (p95 133-165 ms with a stuck VS Code installer running), then pass again with no code change. Check load before suspecting a regression. OP1-FUZZ-01 runs 50 pages in PRs; the catalog's 10k nightly run has no workflow yet.
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
+- 2026-11-05 (e): Owner asked for paper detection ahead of the OP5V port. ADR-0011 drafted, owner chose site list then on-click; on-click failed in real Chrome, so site list only. Version kept in a new field. OP1 built test-first (red 48 → green). Real side panel checked in Chrome 156 through navigation and tab changes. Live: 11 of 14 publishers verified; ScienceDirect and medRxiv blocked automation; Europe PMC list unverified.
 - 2026-11-05 (d): Owner accepted ADR-0010 and approved fastapi/uvicorn/pydantic, PSF-2.0 at runtime, and stdlib HTTP (no httpx at runtime). S2 passed. BE0 skeleton built test-first (red: collection error → green 17/17). FastAPI 0.162 brings opentelemetry-api (no-op; BE0-SEC-10 guards against an SDK). Nuitka is AGPL and PyInstaller GPL: Briefcase is the only packaging candidate.
 - 2026-11-05 (c): OP5V in TS test-first (red 33 → green 86/87). Owner then asked for a standalone local app and one shared Python backend; drafted ADR-0010 (Proposed) and paused OP5V. Nothing committed.
 - 2026-11-05 (b): SVC0 scaffold on `feat/svc0-scaffold`. Numbers: 54 unit/property/integration tests (Vitest ~8 s), 7 e2e (Playwright headless ~35–41 s), catalog SVC0 35/35, SYS-OBS 3/5, SYS-SEC 10/27 (rest belong to later units). Build 218 KB (side panel chunk 200 KB: Dexie + Zod; no budget set yet). Licence gate 340 packages pass. gitleaks: no leaks. Spec deltas D11–D21 recorded in impl-plans README.

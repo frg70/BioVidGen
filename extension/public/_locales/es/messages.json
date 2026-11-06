@@ -5,5 +5,13 @@
   "panelTitle": { "message": "BioVidGen" },
   "panelEmpty": { "message": "Abre un artículo científico para ver sus datos aquí." },
   "optionsTitle": { "message": "Opciones de BioVidGen" },
-  "optionsEmpty": { "message": "Aún no hay opciones configurables." }
+  "optionsEmpty": { "message": "Aún no hay opciones configurables." },
+  "panelUntitled": { "message": "Artículo sin título detectado" },
+  "panelDoi": { "message": "DOI" },
+  "panelVersion": { "message": "Versión del preprint" },
+  "panelPmid": { "message": "PMID" },
+  "panelPmcid": { "message": "PMCID" },
+  "panelPick": { "message": "Encontramos estos DOI. ¿Cuál es el de este artículo?" },
+  "panelNoId": { "message": "No se encontró un identificador en esta página." },
+  "panelList": { "message": "Lista de resultados: $COUNT$ artículos.","placeholders": { "COUNT": { "content": "$1" }}}
 }

@@ -22,6 +22,8 @@ export const test = base.extend<{
   extensionId: string;
   egress: Captured[];
   pages: Map<string, string>;
+  /** Recorded pages served on real publisher hostnames, keyed by full URL. Never reaches the network. */
+  sites: Map<string, string>;
 }>({
   // Playwright requires an object pattern as the first fixture argument.
   // eslint-disable-next-line no-empty-pattern
@@ -29,10 +31,14 @@ export const test = base.extend<{
     await use(new Map());
   },
   // eslint-disable-next-line no-empty-pattern
+  sites: async ({}, use) => {
+    await use(new Map());
+  },
+  // eslint-disable-next-line no-empty-pattern
   egress: async ({}, use) => {
     await use([]);
   },
-  context: async ({ egress, pages }, use) => {
+  context: async ({ egress, pages, sites }, use) => {
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       args: [`--disable-extensions-except=${EXTENSION_DIR}`, `--load-extension=${EXTENSION_DIR}`, '--lang=es'],
@@ -43,6 +49,8 @@ export const test = base.extend<{
     await context.route('**/*', async (route) => {
       const url = new URL(route.request().url());
       if (url.protocol === 'chrome-extension:') return route.continue();
+      const recorded = sites.get(url.href);
+      if (recorded !== undefined) return route.fulfill({ status: 200, contentType: 'text/html', body: recorded });
       if (url.host === FIXTURE_HOST) {
         const html = pages.get(url.pathname);
         return html === undefined ? route.fulfill({ status: 404, body: '' }) : route.fulfill({ status: 200, contentType: 'text/html', body: html });

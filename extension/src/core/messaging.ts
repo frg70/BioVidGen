@@ -44,11 +44,15 @@ export interface Messaging {
     opts?: { allow?: SenderRole },
   ): () => void;
   send<Req extends z.ZodType, Res extends z.ZodType>(def: MessageDef<Req, Res>, payload: z.infer<Req>): Promise<Result<z.infer<Res>, string>>;
+  /** Same as send, to the content script of one tab (delta D21). */
+  sendToTab<Req extends z.ZodType, Res extends z.ZodType>(def: MessageDef<Req, Res>, tabId: number, payload: z.infer<Req>): Promise<Result<z.infer<Res>, string>>;
 }
 
 export interface MessagingOptions {
   /** Called for every rejected inbound message, so the composition root can log it. */
   onReject?: (code: RejectCode, name: string) => void;
+  /** chrome.tabs, for sendToTab. Without it sendToTab answers NO_RECEIVER. */
+  tabs?: { sendMessage(tabId: number, message: unknown): Promise<unknown> };
 }
 
 const Envelope = z.strictObject({ v: z.literal(1), name: z.string().min(1).max(80), payload: z.unknown() });
@@ -63,6 +67,23 @@ function roleOf(sender: SenderLike, runtimeId: string): 'extension' | 'content' 
   if (sender.url?.startsWith(`chrome-extension://${runtimeId}/`)) return 'extension';
   if (sender.tab !== undefined) return 'content';
   return 'unknown';
+}
+
+async function exchange<Req extends z.ZodType, Res extends z.ZodType>(def: MessageDef<Req, Res>, payload: z.infer<Req>, deliver: (message: unknown) => Promise<unknown>): Promise<Result<z.infer<Res>, string>> {
+  const req = def.req.safeParse(payload);
+  if (!req.success) return err('BAD_MESSAGE');
+  let raw: unknown;
+  try {
+    raw = await deliver({ v: 1, name: def.name, payload: req.data });
+  } catch {
+    return err('NO_RECEIVER');
+  }
+  if (raw === undefined) return err('NO_RECEIVER');
+  const reply = Reply.safeParse(raw);
+  if (!reply.success) return err('BAD_RESPONSE');
+  if (!reply.data.ok) return err(reply.data.code, reply.data.status);
+  const value = def.res.safeParse(reply.data.value);
+  return value.success ? ok(value.data) : err('BAD_RESPONSE');
 }
 
 export function createMessaging(runtime: RuntimeLike, opts: MessagingOptions = {}): Messaging {
@@ -98,21 +119,7 @@ export function createMessaging(runtime: RuntimeLike, opts: MessagingOptions = {
       return () => runtime.onMessage.removeListener(listener);
     },
 
-    async send(def, payload) {
-      const req = def.req.safeParse(payload);
-      if (!req.success) return err('BAD_MESSAGE');
-      let raw: unknown;
-      try {
-        raw = await runtime.sendMessage({ v: 1, name: def.name, payload: req.data });
-      } catch {
-        return err('NO_RECEIVER');
-      }
-      if (raw === undefined) return err('NO_RECEIVER');
-      const reply = Reply.safeParse(raw);
-      if (!reply.success) return err('BAD_RESPONSE');
-      if (!reply.data.ok) return err(reply.data.code, reply.data.status);
-      const value = def.res.safeParse(reply.data.value);
-      return value.success ? ok(value.data) : err('BAD_RESPONSE');
-    },
+    send: (def, payload) => exchange(def, payload, (m) => runtime.sendMessage(m)),
+    sendToTab: (def, tabId, payload) => exchange(def, payload, (m) => (opts.tabs ? opts.tabs.sendMessage(tabId, m) : Promise.reject(new Error('no tabs')))),
   };
 }
