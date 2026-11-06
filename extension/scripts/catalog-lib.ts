@@ -26,6 +26,13 @@ export function collectTestTitles(source: string): string[] {
   return [...source.matchAll(TITLE)].map((m) => m[2] ?? '');
 }
 
+const PYTHON_TEST = /^\s*(?:async\s+)?def test_\w+\([^)]*\)[^:\n]*:\s*"""([\s\S]*?)"""/gm;
+
+/** Docstrings of Python test functions: the backend's tests name their catalog IDs there. */
+export function collectPythonTitles(source: string): string[] {
+  return [...source.matchAll(PYTHON_TEST)].map((m) => m[1] ?? '');
+}
+
 const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 /** Active IDs with prefix `${unit}-` that appear in no title (ID followed by a non-digit). */

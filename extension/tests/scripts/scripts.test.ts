@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { toJsonSchemas } from '../../src/contracts/json-schema';
-import { collectTestTitles, findUncovered, parseCatalogIds } from '../../scripts/catalog-lib';
+import { collectPythonTitles, collectTestTitles, findUncovered, parseCatalogIds } from '../../scripts/catalog-lib';
 import { checkLockfile, isAllowed } from '../../scripts/licenses-lib';
 
 const ROOT = join(import.meta.dirname, '..', '..');
@@ -47,6 +47,26 @@ describe('catalog coverage script', () => {
     expect(findUncovered(ids, titles.slice(0, 2), 'OP5V')).toEqual({ covered: ['OP5V-PROP-01'], uncovered: ['OP5V-PROP-02'] });
     expect(findUncovered(ids, titles, 'OP5')).toEqual({ covered: ['OP5-UNIT-01'], uncovered: [] });
     expect(findUncovered(ids, titles, 'SYS')).toEqual({ covered: [], uncovered: ['SYS-SEC-01'] });
+  });
+
+  it('SVC0-UNIT-22 reads IDs from the docstrings of Python tests, and only from tests', () => {
+    const q = '"'.repeat(3);
+    const src = [
+      `${q}Module docstring naming OP5V-PROP-01 covers nothing.${q}`,
+      'def helper() -> None:',
+      `    ${q}OP5V-PROP-02 helper, not a test.${q}`,
+      'def test_one(db: Path) -> None:',
+      `    ${q}OP5V-UNIT-12 OP5V-RES-01 first "quoted" line`,
+      '    second line.',
+      `    ${q}`,
+      'def test_no_docstring() -> None:',
+      '    assert True',
+      'def test_two(',
+      '    a: int,',
+      ') -> None:',
+      `    ${q}OP5-UNIT-01 multi-line signature.${q}`,
+    ].join('\n');
+    expect(collectPythonTitles(src)).toEqual(['OP5V-UNIT-12 OP5V-RES-01 first "quoted" line\n    second line.\n    ', 'OP5-UNIT-01 multi-line signature.']);
   });
 });
 

@@ -7,7 +7,7 @@ Update this file at the end of every working session, in the same PR as the work
 ## Status
 - **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
 - **Branch chain (all local, nothing pushed):** `docs/pipeline-v3` → `feat/svc0-scaffold` → `feat/op5v-validate-evidence` → `feat/be0-backend-skeleton` → `feat/op1-detect-paper` → `feat/op5v-python-port`.
-- `app/agent/` (owner's working tree renames it `app/backend/`, uncommitted) holds v1 notes only; the new backend is `backend/`.
+- `app/agent/` holds v1 notes only; the new backend is `backend/`. On 2026-11-06 the whole `app/` folder, with the uncommitted rename to `app/backend/`, went to the Recycle Bin (not by the agent). Git shows the two `app/agent/` files as deleted, not committed. **Open:** owner decides whether to commit the deletion or restore.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
   - Tech spec v3 + ADR-0008/0009: `docs/process-design/`, `docs/adr/`
@@ -41,7 +41,8 @@ Update this file at the end of every working session, in the same PR as the work
   - validate p50 ~37-45 ms, p95 ~40-56 ms on this machine (target 20 ms, fail line 100 ms: target missed, fail line met);
   - mutation 93.9% (248/264, target 90%; evidence.py 106/106). 7 kills are hangs in loop mutants; without them 91.3%. All 16 survivors read as equivalent (list in `docs/runbooks/op5v.md`). The first run (88.3%) found a real gap: nothing tested the whole-cluster rule, so "dose of 1" against "dose of ½" went unguarded. The code was right; tests added;
   - 1,788 backend tests;
-  - no HTTP endpoint yet (step 3). No scheduled mutation job. `npm run catalog` does not read Python docstrings, so PY rows are not counted by the script.
+  - no HTTP endpoint yet (step 3). No scheduled mutation job (the catalog gates OP5V-MUT-01 nightly).
+  - catalog OP5V 38/45 (open: HYP-02, VAL-01, KPI-02 need eval or a pilot; E2E-01, A11Y-01, CON-01 need VW1 and OP13; MIG-01 needs a schema bump). BE0 15/15. 21 e2e pass.
 - [ ] **Next: ADR-0010 step 3**, extension client (pairing UI, "backend off" state, rule 1/2 updates).
 - [ ] OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
@@ -175,6 +176,7 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
+- 2026-11-06 (g): `npm run catalog` now reads Python test docstrings, so backend IDs count. E2E rerun, 21/21.
 - 2026-11-06 (f): Manual DOI entry committed (`ca39285`, D33). OP5V ported to Python test-first against vectors frozen from TS; own stdlib mutation runner after mutmut and cosmic-ray both failed (D34). Added hypothesis (dev). On-click alternative to ADR-0011 still the owner's call.
 - 2026-11-05 (e): Owner asked for paper detection ahead of the OP5V port. ADR-0011 drafted, owner chose site list then on-click; on-click failed in real Chrome, so site list only. Version kept in a new field. OP1 built test-first (red 48 → green). Real side panel checked in Chrome 156 through navigation and tab changes. Live: 11 of 14 publishers verified; ScienceDirect and medRxiv blocked automation; Europe PMC list unverified.
 - 2026-11-05 (d): Owner accepted ADR-0010 and approved fastapi/uvicorn/pydantic, PSF-2.0 at runtime, and stdlib HTTP (no httpx at runtime). S2 passed. BE0 skeleton built test-first (red: collection error → green 17/17). FastAPI 0.162 brings opentelemetry-api (no-op; BE0-SEC-10 guards against an SDK). Nuitka is AGPL and PyInstaller GPL: Briefcase is the only packaging candidate.

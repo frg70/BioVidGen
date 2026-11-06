@@ -81,7 +81,7 @@ Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this tabl
 | Types | `npm run typecheck` |
 | Licence gate | `npm run licenses` (reads `package-lock.json`) |
 | Secret scan | `npm run secrets` (needs gitleaks 8.30.1 on PATH; CI installs it) |
-| Catalog coverage for a unit | `npm run catalog -- OP5V` (any ID prefix: `SVC0`, `SYS-SEC`). Lists catalog IDs that have no test with that ID in its name; `--strict` exits 1 |
+| Catalog coverage for a unit | `npm run catalog -- OP5V` (any ID prefix: `SVC0`, `SYS-SEC`). Lists catalog IDs that have no test with that ID in its name, or in its docstring for backend tests; `--strict` exits 1 |
 | Export contracts as JSON Schema for eval/ | `npm run schemas` (→ `eval/schemas/`) |
 | Regenerate the vectors the Python OP5V runs against | `npm run vectors` (→ `fixtures/op5v/vectors/`; needed when OP5V-PY-03 fails) |
 | Eval tool | `cd eval && uv sync && uv run pytest` (not created yet: SVC7) |

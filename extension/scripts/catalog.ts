@@ -5,10 +5,11 @@
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { collectTestTitles, findUncovered, parseCatalogIds } from './catalog-lib';
+import { collectPythonTitles, collectTestTitles, findUncovered, parseCatalogIds } from './catalog-lib';
 
 const ROOT = join(import.meta.dirname, '..');
 const CATALOG = join(ROOT, '..', 'docs', 'testing', 'test-catalog.md');
+const BACKEND_TESTS = join(ROOT, '..', 'backend', 'tests');
 const SKIP = new Set(['node_modules', '.output', '.wxt', 'playwright-report', 'test-results']);
 
 function testFiles(dir: string): string[] {
@@ -27,7 +28,11 @@ if (!unit) {
   process.exit(2);
 }
 const ids = parseCatalogIds(readFileSync(CATALOG, 'utf8'));
-const titles = testFiles(ROOT).flatMap((f) => collectTestTitles(readFileSync(f, 'utf8')));
+const pythonTests = readdirSync(BACKEND_TESTS).filter((name) => /^test_.*\.py$/.test(name));
+const titles = [
+  ...testFiles(ROOT).flatMap((f) => collectTestTitles(readFileSync(f, 'utf8'))),
+  ...pythonTests.flatMap((name) => collectPythonTitles(readFileSync(join(BACKEND_TESTS, name), 'utf8'))),
+];
 const { covered, uncovered } = findUncovered(ids, titles, unit);
 const total = covered.length + uncovered.length;
 if (total === 0) {
