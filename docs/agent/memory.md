@@ -1,12 +1,12 @@
 # BioVidGen — Project memory
 
-Last updated: 2026-11-06.
+Last updated: 2026-11-07.
 
 Update this file at the end of every working session, in the same PR as the work. Keep it short: state, numbers and facts belong here; explanations go in `reasoning.md` or the docs.
 
 ## Status
 - **Phase:** P0 (spikes + walking skeleton), **in progress**. Architecture changed 2026-11-05 (ADR-0010): Chrome extension (thin client) + local web app, both served by one Python backend on 127.0.0.1.
-- **Branches:** `feat/op5v-python-port` holds the whole chain from `docs/pipeline-v3` and is open as [PR #2](https://github.com/frg70/BioVidGen/pull/2) against `main`; CI green on it 2026-11-06. It is one large PR because the units were built as a chain: review by commit. `feat/be1-extension-client` stacks on it, local only.
+- **Branches:** [PR #2](https://github.com/frg70/BioVidGen/pull/2) `feat/op5v-python-port` (whole chain from `docs/pipeline-v3`, review by commit) → [PR #3](https://github.com/frg70/BioVidGen/pull/3) `feat/be1-extension-client` (based on #2; retarget to `main` once #2 merges) → `feat/op3-resolve-metadata` (local). CI green on #2 and #3. The agent may not merge: the owner merges.
 - `app/` (v1 notes) deleted with owner approval, 2026-11-06. Its user flow is recorded in `docs/process-design/process-map.md`.
 - **Docs pipeline: complete.**
   - Discovery: `docs/discovery/`
@@ -41,7 +41,7 @@ Update this file at the end of every working session, in the same PR as the work
   - validate p50 ~37-45 ms, p95 ~40-56 ms on this machine (target 20 ms, fail line 100 ms: target missed, fail line met);
   - mutation 93.9% (248/264, target 90%; evidence.py 106/106). 7 kills are hangs in loop mutants; without them 91.3%. All 16 survivors read as equivalent (list in `docs/runbooks/op5v.md`). The first run (88.3%) found a real gap: nothing tested the whole-cluster rule, so "dose of 1" against "dose of ½" went unguarded. The code was right; tests added;
   - 1,788 backend tests;
-  - no HTTP endpoint yet (step 3). No scheduled mutation job (the catalog gates OP5V-MUT-01 nightly).
+  - no HTTP endpoint yet (step 3). Mutation runs nightly since 2026-11-07 (`nightly.yml`).
   - catalog OP5V 38/45 (open: HYP-02, VAL-01, KPI-02 need eval or a pilot; E2E-01, A11Y-01, CON-01 need VW1 and OP13; MIG-01 needs a schema bump). BE0 15/15. 21 e2e pass.
 - [x] **BE1 extension client** (ADR-0010 step 3) on `feat/be1-extension-client`, stacked on PR #2:
   - the panel checks the backend when it opens, names what is wrong (off, id not allowed, no token, token refused) and pairs by pasted token;
@@ -49,7 +49,13 @@ Update this file at the end of every working session, in the same PR as the work
   - 161 unit tests, 26 e2e; catalog BE1 14/14;
   - all states correct against the real backend with real CORS, in Chrome 156 and bundled Chromium, no prompt. Ran as a tab, not in the side panel itself;
   - page text, the OP5V endpoint and the API-key move left for OP4 and OP5 (D35).
-- [ ] **Next:** OP3 Resolve → OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
+- [x] **OP3 Resolve metadata** on `feat/op3-resolve-metadata`, in the backend (`scholarly/`), OpenAlex only (D36, owner approved 2026-11-07):
+  - spike (`backend/scripts/spike_op3.py`), 204 MEDLINE + 200 Latin American DOIs: authors 99.0/98.0%, keywords or topics 99.0/99.5%, Crossref gain +0 pp, both-host p95 0.78/0.71 s, payload p95 22/20 KB. Regional journals: PMCID only 13.5%;
+  - `GET /api/v1/article?doi=`; SQLite cache 30 d fresh, 90 d kept; single flight; stdlib transport with a total deadline, redirects pinned to the origin, 2 MB cap;
+  - panel header (authors, journal, year, type, keywords, topic) once paired; typed DOIs are now checked;
+  - 62 backend OP3 tests, 1,850 backend total; 165 unit, 28 e2e; catalog OP3 39/43 (open: spike rows only);
+  - mutation 98.1% (target 80%); first run 80.6% found 18 untested cut points and limits. Nightly workflow `nightly.yml` runs OP3-PERF-02 and the OP5V and OP3 mutation runs (first run happens after merge to main).
+- [ ] **Next:** OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
   - one paper flows from detection to export on 3 publishers;
@@ -97,6 +103,10 @@ Format: fact (date, source).
 - Prefix 10.64898 belongs to openRxiv. (2026-11-05, Crossref API)
 - biomedcentral.com redirects to link.springer.com. (2026-11-05)
 - PubMed result lists expose PMIDs, not DOIs. (design finding)
+- OpenAlex `ids.pmcid` comes as `https://www.ncbi.nlm.nih.gov/pmc/articles/<digits>`, without the PMC prefix. (2026-11-07, API)
+- Crossref returned no `subject` on 404 sampled works. (2026-11-07, spike)
+- OpenAlex answers a third of bioRxiv DOIs with the published article (12/34: the returned `doi` differs), and types every sampled Genome Research / Genes & Development article (`10.1101/gr.*`) as `preprint`. Never use OpenAlex `type` for preprint status. (2026-11-07, S3)
+- Crossref `/works/{doi}` `updated-by` lists retraction, EoC and correction notices with `source` (`publisher` or `retraction-watch`) and date; `filter=updates:` misses notices that come only from Retraction Watch (13/20 agree). `relation.is-preprint-of` was empty on 34 of 34 bioRxiv preprints. Some DOIs (e.g. `10.26355`, Eur Rev Med Pharmacol Sci) are 404 in Crossref while OpenAlex flags them retracted. (2026-11-07, S3)
 - When the backend refuses an Origin, a CORS fetch fails exactly like a closed port. A `no-cors` GET sends no Origin, so a running backend answers it with an opaque response (status 0). (2026-11-06, Chrome 156 and Chromium 156 against the real backend)
 - Chromium on Linux ignores `--lang` and takes its UI language from `LANGUAGE`; Windows honours `--lang`. (2026-11-06, CI)
 - Zod 4 `.max()` on strings counts code points, not UTF-16 units: 1001 emoji pass `max(2000)` and also `max(1001)`. (2026-11-05, run against zod 4.6.7)
@@ -182,9 +192,15 @@ Append as you find them, one line each, with the date.
 - 2026-11-05: pytest with `addopts=-q` plus another `-q` hides the summary line: read the exit code.
 - 2026-11-06: Playwright answers CORS itself on routed requests, so e2e cannot catch a real CORS problem. After changing the client or the backend's checks, run the by-hand table in `docs/runbooks/be1.md`.
 - 2026-11-06: Green on Windows is not green on Linux: CI's first run failed 7 e2e tests that always passed here.
+- 2026-11-07: urllib's `timeout` limits each socket read, not the request: one spike call took 752 s with `timeout=15`. The backend checks a deadline between `read1` calls.
+- 2026-11-07: PowerShell: `R` is an alias of Invoke-History, so a helper function named `R` silently does nothing. Use the edit tool.
+- 2026-11-07: SQLite WAL with the default `synchronous = FULL` fsyncs every commit: up to 82 ms per log row on a busy Windows disk. `NORMAL` (now set) takes it to ~13 ms.
+- 2026-11-07: Timing tests fail while a mutation run holds the cores (OP3-RES-02 took >1.5 s): bounds now leave room; do not run timing tests next to a mutation run.
+- 2026-11-07: e2e OP1-UNIT-10 failed once in a full run and passed alone and on the rerun (load).
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 
 ## Session log
+- 2026-11-07: Merge of PR #2 refused to the agent (needs the owner). PR #3 opened for BE1, CI green. OP3 spike: H1 and H3 pass, H2 fails; owner approved OpenAlex only (D36). OP3 built test-first in the backend, then the panel header.
 - 2026-11-06 (h): Owner approved deleting `app/`, the PR and step 3. PR #2 opened; first CI run failed on Linux locale, fixed, green. BE1 built test-first; real-browser check caught nothing, but self-review found 2 keyboard bugs (tests first).
 - 2026-11-06 (g): `npm run catalog` now reads Python test docstrings, so backend IDs count. E2E rerun, 21/21.
 - 2026-11-06 (f): Manual DOI entry committed (`ca39285`, D33). OP5V ported to Python test-first against vectors frozen from TS; own stdlib mutation runner after mutmut and cosmic-ray both failed (D34). Added hypothesis (dev). On-click alternative to ADR-0011 still the owner's call.

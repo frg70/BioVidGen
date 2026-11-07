@@ -31,6 +31,14 @@ MIGRATIONS: list[str] = [
     );
     CREATE INDEX summaries_doi ON summaries(doi, created_at);
     """,
+    """
+    CREATE TABLE articles (
+      doi TEXT PRIMARY KEY,
+      fetched_at TEXT NOT NULL,
+      body TEXT NOT NULL
+    );
+    CREATE INDEX articles_fetched_at ON articles(fetched_at);
+    """,
 ]
 SCHEMA_VERSION = len(MIGRATIONS)
 
@@ -41,6 +49,9 @@ def connect(path: Path) -> Iterator[sqlite3.Connection]:
     conn = sqlite3.connect(path, timeout=5)
     try:
         conn.execute("PRAGMA foreign_keys = ON")
+        # WAL + NORMAL: no fsync per commit (it cost up to 80 ms per log row on a busy disk). Never corrupts; a power
+        # cut can lose the last commits, which are logs, a cache and summaries that can be made again.
+        conn.execute("PRAGMA synchronous = NORMAL")
         with conn:
             yield conn
     finally:

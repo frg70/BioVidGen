@@ -14,7 +14,7 @@ export const MODULE_DEPS = {
   core: [],
   contracts: [],
   detect: ['core', 'contracts'],
-  backend: ['core'],
+  backend: ['core', 'contracts'],
   scholarly: ['core', 'contracts', 'settings'],
   text: ['core', 'contracts'],
   summary: ['core', 'contracts', 'text', 'scholarly', 'settings'],

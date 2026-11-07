@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ResolvedSchema, type Resolved } from '../contracts/article';
 import { BACKEND_HOST } from '../core/egress';
 import type { Http } from '../core/http';
 import { createDefaultHttp } from '../core/http';
@@ -17,6 +18,8 @@ import type { RunId } from '../core/runid';
  */
 export type BackendCode = 'BACKEND_OFF' | 'WRONG_ORIGIN' | 'UNPAIRED' | 'TOKEN_REJECTED' | 'BAD_TOKEN_FORMAT';
 export type BackendResult = Result<null, BackendCode>;
+/** NOT_FOUND: OpenAlex has no such DOI · UPSTREAM_DOWN: OpenAlex unreachable and nothing saved · UPSTREAM_INVALID: a bad answer. */
+export type ArticleCode = 'BACKEND_OFF' | 'UNPAIRED' | 'TOKEN_REJECTED' | 'NOT_FOUND' | 'UPSTREAM_DOWN' | 'UPSTREAM_INVALID';
 
 export interface TokenStore {
   get(): Promise<unknown>;
@@ -56,13 +59,37 @@ export function createBackendClient(http: Http, tokens: TokenStore) {
     return err(status.code === 'HTTP_ERROR' && status.status === 401 ? 'TOKEN_REJECTED' : 'BACKEND_OFF');
   }
 
+  async function storedToken(): Promise<string | null> {
+    const token = await tokens.get();
+    return typeof token === 'string' && TOKEN.test(token) ? token : null;
+  }
+
   return {
+    /** OP3: the article's metadata, which the backend gets from OpenAlex. Only the DOI is sent. */
+    async article(doi: string, runId: RunId): Promise<Result<Resolved, ArticleCode>> {
+      const token = await storedToken();
+      if (token === null) return err('UNPAIRED');
+      const url = `${BASE}/api/v1/article?doi=${encodeURIComponent(doi)}`;
+      // The backend retries OpenAlex itself (up to 3 attempts of about 7.5 s each), so this client does not.
+      const got = await http.get(url, { timeoutMs: 30_000, retry: false, headers: { 'X-BVG-Token': token, 'X-BVG-Run-Id': runId } });
+      if (got.ok) {
+        try {
+          const parsed = ResolvedSchema.safeParse(await got.value.json());
+          return parsed.success ? ok(parsed.data) : err('UPSTREAM_INVALID');
+        } catch {
+          return err('UPSTREAM_INVALID');
+        }
+      }
+      const byStatus: Record<number, ArticleCode> = { 401: 'TOKEN_REJECTED', 404: 'NOT_FOUND', 503: 'UPSTREAM_DOWN' };
+      if (got.code === 'HTTP_ERROR' || got.code === 'UPSTREAM_ERROR') return err(byStatus[got.status ?? 0] ?? 'UPSTREAM_INVALID');
+      return err('BACKEND_OFF');
+    },
     /** Where things stand now. Called when the panel opens and when the student asks to retry. */
     async check(runId: RunId): Promise<BackendResult> {
       const up = await reachable();
       if (!up.ok) return up;
-      const token = await tokens.get();
-      return typeof token === 'string' && TOKEN.test(token) ? authorise(token, runId) : err('UNPAIRED');
+      const token = await storedToken();
+      return token === null ? err('UNPAIRED') : authorise(token, runId);
     },
     /** Stores the token only once the backend has accepted it, so a typo never replaces a working one. */
     async pair(raw: string, runId: RunId): Promise<BackendResult> {

@@ -1,7 +1,10 @@
 import type { ComponentChildren } from 'preact';
 import { useEffect, useRef, useState } from 'preact/hooks';
+import type { ArticleCode } from '../../src/backend/client';
+import type { Article, Resolved } from '../../src/contracts/article';
 import type { PageContext } from '../../src/contracts/page-context';
-import { t } from '../../src/core/i18n';
+import { t, type MessageKey } from '../../src/core/i18n';
+import type { Result } from '../../src/core/result';
 import type { PanelState } from '../../src/detect/panel-tracker';
 
 /** VW1 header. Page strings render as text, never as HTML (rule 3). */
@@ -14,9 +17,68 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
+/** Looks a DOI up through the backend (OP3). Null while the backend is not paired: then nothing is asked. */
+export type Lookup = (doi: string) => Promise<Result<Resolved, ArticleCode>>;
+
 interface Actions {
   onEnterDoi: (raw: string) => boolean;
   onClearDoi: () => void;
+  lookup?: Lookup | null;
+}
+
+const AUTHORS_SHOWN = 10;
+const TYPES: Record<string, MessageKey> = {
+  article: 'articleType_article',
+  review: 'articleType_review',
+  letter: 'articleType_letter',
+  editorial: 'articleType_editorial',
+};
+
+function authorsLine(authors: Article['authors']): string {
+  const names = authors.slice(0, AUTHORS_SHOWN).map((a) => a.name).join('; ');
+  return authors.length > AUTHORS_SHOWN ? `${names}; ${t('articleMoreAuthors', String(authors.length - AUTHORS_SHOWN))}` : names;
+}
+
+/** OP3 header: what OpenAlex knows about the DOI. Every value is rendered as text (rule 3, OP3-SEC-02). */
+function ArticleMeta({ doi, lookup, showTitle }: { doi: string; lookup: Lookup; showTitle: boolean }) {
+  const [result, setResult] = useState<Result<Resolved, ArticleCode> | null>(null);
+  useEffect(() => {
+    let current = true; // a slow answer for a DOI the student has left is dropped
+    setResult(null);
+    void lookup(doi).then((r) => {
+      if (current) setResult(r);
+    });
+    return () => {
+      current = false;
+    };
+  }, [doi, lookup]);
+
+  let body;
+  if (result === null) body = <p>{t('articleLoading')}</p>;
+  else if (!result.ok) body = <p>{t(result.code === 'NOT_FOUND' ? 'articleNotFound' : 'articleUnavailable')}</p>;
+  else {
+    const { article: a, stale } = result.value;
+    // OpenAlex's "preprint" type is wrong too often to show (all 50 Genome Research / Genes & Dev articles sampled in
+    // S3): preprint status comes from OP12, from Crossref and the DOI pattern.
+    const type = a.type && a.type !== 'preprint' ? (TYPES[a.type] ? t(TYPES[a.type] as MessageKey) : a.type) : null;
+    body = (
+      <>
+        {a.matchedDoi ? <p>{t('articleMatched', a.matchedDoi)}</p> : null}
+        <dl>
+          {showTitle && a.title ? <Field label={t('articleTitle')} value={a.title} /> : null}
+          <Field label={t('articleAuthors')} value={a.authors.length > 0 ? authorsLine(a.authors) : t('articleNoAuthors')} />
+          {a.journal ? <Field label={t('articleJournal')} value={a.journal} /> : null}
+          {a.year !== null ? <Field label={t('articleYear')} value={String(a.year)} /> : null}
+          {type ? <Field label={t('articleType')} value={type} /> : null}
+          {a.keywords.length > 0 ? <Field label={t('articleKeywords')} value={a.keywords.map((k) => k.term).join(', ')} /> : null}
+          {a.primaryTopic ? <Field label={t('articleTopic')} value={a.primaryTopic.name} /> : null}
+        </dl>
+        {stale ? <p>{t('articleStale', a.fetchedAt.slice(0, 10))}</p> : null}
+        <p>{t('articleSource')}</p>
+      </>
+    );
+  }
+  return <div aria-live="polite">{body}</div>;
 }
 
 /** For journals the extension cannot read (ADR-0011) and pages that give no usable DOI. */
@@ -62,7 +124,7 @@ function ManualDoi({ onEnterDoi, focusOnMount }: { onEnterDoi: Actions['onEnterD
   );
 }
 
-function Article({ page, onEnterDoi, onClearDoi, focusForm }: { page: PageContext; focusForm: boolean } & Actions) {
+function ArticlePage({ page, onEnterDoi, onClearDoi, lookup, focusForm }: { page: PageContext; focusForm: boolean } & Actions) {
   // A DOI found only in page text is not certain: the student confirms it, the tool does not guess (OP1 plan §9).
   const options = page.doiSource === 'regex' && page.doi ? [page.doi] : page.candidates;
   const [picked, setPicked] = useState<string | null>(null);
@@ -87,9 +149,10 @@ function Article({ page, onEnterDoi, onClearDoi, focusForm }: { page: PageContex
         {page.pmid ? <Field label={t('panelPmid')} value={page.pmid} /> : null}
         {page.pmcid ? <Field label={t('panelPmcid')} value={page.pmcid} /> : null}
       </dl>
+      {doi && lookup ? <ArticleMeta doi={doi} lookup={lookup} showTitle={!page.title} /> : null}
       {manual ? (
         <p>
-          {t('panelManualNote')}{' '}
+          {lookup ? null : <>{t('panelManualNote')} </>}
           <button type="button" onClick={onClearDoi}>
             {t('panelManualChange')}
           </button>
@@ -122,14 +185,14 @@ function Article({ page, onEnterDoi, onClearDoi, focusForm }: { page: PageContex
 }
 
 /** Everything in here is local to one page: PaperView remounts it when the student navigates. */
-function PageBody({ state, onEnterDoi, onClearDoi }: { state: PanelState } & Actions) {
+function PageBody({ state, onEnterDoi, onClearDoi, lookup }: { state: PanelState } & Actions) {
   const { page } = state;
   const [cleared, setCleared] = useState(false);
   const clear = () => {
     setCleared(true); // focus goes back to the field
     onClearDoi();
   };
-  if (page?.kind === 'article') return <Article key={page.url} page={page} onEnterDoi={onEnterDoi} onClearDoi={clear} focusForm={cleared} />;
+  if (page?.kind === 'article') return <ArticlePage key={page.url} page={page} onEnterDoi={onEnterDoi} onClearDoi={clear} lookup={lookup ?? null} focusForm={cleared} />;
   if (page?.kind === 'result_list') return <p>{t('panelList', String(page.resultIds.length))}</p>;
   return (
     <>
@@ -139,11 +202,11 @@ function PageBody({ state, onEnterDoi, onClearDoi }: { state: PanelState } & Act
   );
 }
 
-export function PaperView({ state, onEnterDoi, onClearDoi, children }: { state: PanelState; children?: ComponentChildren } & Actions) {
+export function PaperView({ state, onEnterDoi, onClearDoi, lookup, children }: { state: PanelState; children?: ComponentChildren } & Actions) {
   return (
     <main>
       <h1>{t('panelTitle')}</h1>
-      <PageBody key={state.navigation} state={state} onEnterDoi={onEnterDoi} onClearDoi={onClearDoi} />
+      <PageBody key={state.navigation} state={state} onEnterDoi={onEnterDoi} onClearDoi={onClearDoi} lookup={lookup ?? null} />
       {children}
     </main>
   );

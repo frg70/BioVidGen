@@ -57,6 +57,20 @@ def test_mutants_change_the_code_and_leave_docstrings_and_annotations_alone() ->
         assert m.line > 0
 
 
+def test_units_point_at_real_code_and_tests() -> None:
+    """OP3-MUT-01 OP5V-MUT-01 each unit's targets and tests exist, OP3 mutates merge + reconstruct at 80 %, OP5V at 90 %."""
+    backend = Path(__file__).parents[1]
+    for unit in mutation_run.UNITS.values():
+        assert all((backend / unit.folder / t).is_file() for t in unit.targets)
+        assert all((backend / t).is_file() for t in unit.tests)
+        assert next(
+            mutation_run.mutants_of(unit.targets[0], (backend / unit.folder / unit.targets[0]).read_text("utf-8"))
+        )
+    op3 = mutation_run.UNITS["op3"]
+    assert (op3.targets, op3.target) == (("openalex.py",), 80.0)
+    assert mutation_run.UNITS["op5v"].target == 90.0
+
+
 def test_mutants_really_behave_differently() -> None:
     """OP5V-MUT-01 removing `not` and swapping `and` change what the program returns, not only how it reads."""
     by_kind = {m.what: m.source for m in mutation_run.mutants_of("m.py", SOURCE)}

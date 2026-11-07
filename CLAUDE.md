@@ -24,7 +24,7 @@ Read the relevant source before changing behaviour.
 | How to reason here; why each decision was made | `docs/agent/reasoning.md` |
 | Reusable prompts (unit, spike, review, end of session) | `docs/agent/prompts.md` |
 | Architecture, modules, interfaces, NFRs, phases | `docs/process-design/tech-spec-v3.md`, `system-spec-v3.yaml` |
-| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D35) |
+| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D37) |
 | Every test that must pass | `docs/testing/test-catalog.md` |
 | Entities, operations, metrics, hypotheses | `docs/discovery/discovery-process-map.md`, `docs/discovery/spec.yaml` |
 | Decisions | `docs/adr/` (0001 and 0002 superseded, 0005 withdrawn, 0010 amends 0006; 0011 page access for OP1) |
@@ -58,6 +58,7 @@ extension/              WXT + TypeScript + Preact, Chrome MV3
 backend/                BE0   Python 3.12 + uv + FastAPI + SQLite, 127.0.0.1 only (ADR-0010)
   src/biovidgen/        config, security (token, Origin/Host, CORS, body limit), db, log, app
   src/biovidgen/summary/  OP5V: contracts, normaliser, evidence, validate (ADR-0010 step 2)
+  src/biovidgen/scholarly/  OP3: http (stdlib, allowlist), openalex, resolve (cache, sole writer of articles)
   scripts/              licence_gate.py (rule 8), mutation_run.py (OP5V-MUT-01)
   tests/                pytest; each test's docstring starts with its catalog ID (BE0-*)
 eval/                   SVC7  Python 3.12 + uv: gold set, kappa, eval runner (dev-time only)
@@ -86,7 +87,8 @@ Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this tabl
 | Eval tool | `cd eval && uv sync && uv run pytest` (not created yet: SVC7) |
 | Backend: install / test | `cd backend && uv sync --locked` · `uv run pytest` · one test: `uv run pytest -k be0_sec_04` |
 | Backend: lint / format / licences | `uv run ruff check .` · `uv run ruff format --check .` · `uv run python scripts/licence_gate.py` |
-| Backend: mutation run (minutes; on temporary copies) | `uv run python scripts/mutation_run.py` |
+| Backend: mutation run (minutes; on temporary copies) | `uv run python scripts/mutation_run.py --unit op5v` (or `op3`) |
+| Backend: slow tests (nightly in CI) | `uv run pytest -m nightly` (`.github/workflows/nightly.yml` also runs both mutation units) |
 | Backend: run locally | `uv run biovidgen` (env: `BIOVIDGEN_DATA_DIR`, `BIOVIDGEN_PORT` default 8765, `BIOVIDGEN_EXTENSION_IDS` comma-separated). The pairing token is in `<data dir>/token` |
 
 ## Non-negotiable rules
@@ -97,7 +99,7 @@ Each rule is guarded by stop-ship tests in the catalog.
    - Scholarly APIs receive identifiers only (DOI, PMID, PMCID).
    - The LLM receives one section of text per call.
    - No telemetry, analytics or remote logging. (SYS-SEC-01…06)
-   - The backend binds to `127.0.0.1` only and follows the same allowlist. Every request passes the Host check, the Origin allowlist and the pairing token (BE0-SEC-01…04). The extension reaches it only at `127.0.0.1:8765` (BE1-SEC-02), and so far sends nothing about the page (BE1-SEC-03).
+   - The backend binds to `127.0.0.1` only and follows the same allowlist. Every request passes the Host check, the Origin allowlist and the pairing token (BE0-SEC-01…04). The extension reaches it only at `127.0.0.1:8765` (BE1-SEC-02), and sends only the paper's DOI, to look it up (BE1-SEC-03, OP3-SEC-01).
 2. **Secrets.** API keys live only in `chrome.storage.local`. They never appear in `storage.sync`, logs, exports, diagnostics, prompts, fixtures or commits. (SYS-SEC-10…15)
    - The backend pairing token (`<data dir>/token`) is a secret under the same rules. The extension keeps it in `chrome.storage.local` (BE1-SEC-01).
    - ADR-0010 moves API keys to the backend (OS keychain via keyring). That arrives with OP5 (delta D35). Update this rule then.

@@ -2,6 +2,8 @@
 
 Phase P0 · Depends on OP1.
 
+> **Built 2026-11-07 in the backend, OpenAlex only (delta D36).** H2 failed (Crossref +0 pp), so the plan's adapt rule applies: Crossref leaves the OP3 path and stays with OP12. Storage is SQLite `articles` in the backend, not Dexie. Sections below are the original plan; where they mention Crossref, page-meta merge, Dexie or stale-while-revalidate, D36 wins. Runbook: `docs/runbooks/op3.md`.
+
 ## 1. Objective & metrics
 - Objective: **maximise field coverage (authors, keywords, type, topic) for a DOI subject to sending only the DOI off-machine and p95 ≤1.5 s warm / ≤3 s cold**. Serves VW1 header and OP12/OP4 inputs.
 - Formulation: input = normalised DOI (1 per call; list pages use OP12 batch, not OP3). Output = `Article`. n = 1; growth = user's reading history (≤ a few thousand Articles per user, ASSUMPTION). Cost: OpenAlex single-entity lookup free/unlimited (dependency register 🟢); Crossref free.
@@ -20,6 +22,24 @@ Logs carry `runId` from the orchestrator.
 | H1 OpenAlex has authors for ≥95% and keywords/topics for ≥85% of target health-science DOIs | lower coverage | 200 DOIs sampled from PubMed (2015–2026), stratified by year | spike: recorded responses | ≥95 / ≥85 | add Crossref `subject`, page `citation_keywords` (already merged) and Europe PMC MeSH as 3rd source |
 | H2 Method: merging OpenAlex+Crossref+page meta raises coverage vs OpenAlex alone by ≥5 pp | gain <5 pp | same 200 | compute both | ≥5 pp | drop Crossref from the OP3 hot path (keep for OP12) |
 | H3 Single lookup cold p95 ≤1.5 s from Mexico | slower | 50 timed calls from a MX connection | spike | ≤1.5 s | show progressive header (title from page meta first) |
+
+**Spike results, 2026-11-07** (`backend/scripts/spike_op3.py`; raw responses not committed). Two samples: 204 MEDLINE DOIs from Europe PMC, about 17 per year 2015–2026 (`--seed 3`), and 200 DOIs from 8 Latin American journals sampled through Crossref (`--regional`; it can only find DOIs Crossref holds). Latency was measured from the dev lead's machine, one DOI at a time with both hosts in parallel.
+
+| Measure | MEDLINE | Latin American | Threshold | Verdict |
+|---|---|---|---|---|
+| H1 OpenAlex authors | 99.0% | 98.0% | ≥95% | pass |
+| H1 OpenAlex keywords or topics | 99.0% | 99.5% | ≥85% | pass |
+| H2 coverage gain from Crossref (author AND keyword/topic) | 98.5% → 98.5%, +0 pp | 98.0% → 98.0%, +0 pp | ≥+5 pp | **fail** |
+| Crossref `subject` present | 0% | 0% | — | Crossref no longer gives subjects here |
+| Abstract: OpenAlex / either | 71.6% / 71.6% | 88.0% / 88.5% | — | Crossref adds 0–0.5 pp |
+| H3 both hosts, p95 | 0.78 s | 0.71 s | ≤1.5 s | pass |
+| Tail | max 9.2 s, one 504 | one call hung 752 s, two connection failures | — | timeouts must be a total deadline |
+| OpenAlex payload with `select`, p95 | 22.3 KB | 19.7 KB | ≤30 KB | pass |
+| Found in OpenAlex / Crossref | 99.5% / 99.5% | 99.5% / 99.5% | — | — |
+| OpenAlex `pmid` / `pmcid` | 99.0% / 66.2% | 81.5% / 13.5% | — | OP4's JATS path rarely applies to regional journals |
+| `type` from OpenAlex | 99.5% | 99.5% | — | OP12 can rely on it |
+
+Also found: a work with 1,011 authors returns all of them in one lookup (about 1 MB with `select`), and `is_authors_truncated` was true on none of the 404. A bad `select` field returns 400. Both hosts accept DOIs in any case. A missing DOI is 404 on both, with an HTML or plain-text body. Crossref's public pool announces 5 requests per second.
 
 ## 3. Security tests
 - Identity: side-panel orchestrator. Grants: C/R/U Article; outbound to `api.openalex.org`, `api.crossref.org` only.

@@ -1,6 +1,7 @@
 """FastAPI app factory. One process serves the extension API and (later) the local web app."""
 
 import contextlib
+import re
 import sqlite3
 import time
 from collections.abc import Awaitable, Callable
@@ -13,6 +14,8 @@ from . import __version__
 from .config import Settings
 from .db import migrate
 from .log import LogEntry, append, is_run_id, new_run_id
+from .scholarly import http
+from .scholarly.resolve import Fetch, Resolver, forget_old
 from .security import (
     CORS_HEADERS,
     PUBLIC_PATHS,
@@ -23,10 +26,16 @@ from .security import (
 )
 
 BODY_METHODS = frozenset({"POST", "PUT", "PATCH"})
+# Normalised DOI, the extension's DOI_PATTERN (src/contracts/page-context.ts) and DOI_MAX.
+DOI = re.compile(r"10\.\d{4,9}/[-._;()/:a-z0-9<>]{1,240}")
+# Distinct statuses, because the extension's http client drops error bodies.
+ARTICLE_ERRORS = {"NOT_FOUND": 404, "UPSTREAM_INVALID": 502, "UPSTREAM_DOWN": 503}
 
 
-def create_app(settings: Settings) -> FastAPI:
+def create_app(settings: Settings, fetch: Fetch = http.fetch) -> FastAPI:
     migrate(settings.db_path)
+    forget_old(settings.db_path, time.time())
+    resolver = Resolver(settings.db_path, fetch=fetch)
     token = load_or_create_token(settings.data_dir)
     hosts = allowed_hosts(settings)
     origins = allowed_origins(settings)
@@ -41,6 +50,16 @@ def create_app(settings: Settings) -> FastAPI:
     @app.get("/api/v1/status")
     def status() -> dict[str, object]:
         return {"paired": True}
+
+    @app.get("/api/v1/article")
+    def article(request: Request, doi: str = "") -> JSONResponse:
+        """OP3: the article's metadata from OpenAlex, cached. Only the DOI comes in, and only the DOI goes out."""
+        if not DOI.fullmatch(doi):
+            return JSONResponse({"error": "BAD_DOI"}, status_code=400)
+        result = resolver.resolve(doi, request.state.run_id)
+        if isinstance(result, str):
+            return JSONResponse({"error": result}, status_code=ARTICLE_ERRORS[result])
+        return JSONResponse(result.model_dump(mode="json"))
 
     # Route names for the log; never log the raw (attacker-controlled) path.
     op_names = {getattr(r, "path", ""): getattr(r, "name", "") for r in app.routes}
@@ -71,6 +90,7 @@ def create_app(settings: Settings) -> FastAPI:
         start = time.monotonic()
         given_run_id = request.headers.get("x-bvg-run-id")
         run_id = given_run_id if given_run_id is not None and is_run_id(given_run_id) else new_run_id()
+        request.state.run_id = run_id
 
         denied = guard(request)
         if denied is not None:

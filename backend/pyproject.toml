@@ -40,7 +40,9 @@ ignore = ["S101"] # asserts are fine in tests
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**" = ["S104", "S105", "S106", "E501"] # fake tokens, refused bind addresses, catalog-text docstrings
+"scripts/spike_*.py" = ["E501"] # dev-time report lines
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-q"
+addopts = "-q -m 'not nightly'"
+markers = ["nightly: slow; runs in .github/workflows/nightly.yml (`uv run pytest -m nightly`), not in PRs"]
