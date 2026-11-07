@@ -10,7 +10,7 @@ import { GetPageContext, PaperDetected } from '../../src/detect/messages';
 import { createPanelTracker, type PanelState, type TabsLike } from '../../src/detect/panel-tracker';
 import { newRunId } from '../../src/core/runid';
 import { BackendStatus, type BackendView } from './backend';
-import { PaperView } from './paper';
+import { PaperView, type Lookup } from './paper';
 
 // Composition root. IndexedDB failure falls back to memory-only logging (SVC0 plan §7);
 // the banner for that state belongs to VW1.
@@ -26,10 +26,11 @@ let backendView: BackendView = 'checking';
 let studentActed = false;
 let actions: { onEnterDoi: (raw: string) => boolean; onClearDoi: () => void } = { onEnterDoi: () => false, onClearDoi: () => undefined };
 let backendActions: { onRetry: () => void; onPair: (token: string) => void } = { onRetry: () => undefined, onPair: () => undefined };
+let lookupArticle: Lookup | null = null; // one function for the panel's life, so the header asks once per DOI
 function draw() {
   if (!root) return;
   render(
-    <PaperView state={panel} {...actions}>
+    <PaperView state={panel} {...actions} lookup={backendView === 'paired' ? lookupArticle : null}>
       <BackendStatus view={backendView} extensionId={browser.runtime.id} moveFocus={studentActed} {...backendActions} />
     </PaperView>,
     root,
@@ -47,6 +48,10 @@ async function boot() {
     const result = await log.op(runId, op, () => call(runId));
     backendView = result.ok ? 'paired' : result.code;
     draw();
+  };
+  lookupArticle = (doi) => {
+    const runId = newRunId();
+    return log.op(runId, 'OP3.lookup', () => backend.article(doi, runId));
   };
   backendActions = {
     onRetry: () => {

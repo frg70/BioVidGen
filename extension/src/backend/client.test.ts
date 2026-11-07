@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import PLOS from '../../fixtures/backend/resolved-plos.json';
+import SPM from '../../fixtures/backend/resolved-spm.json';
+import { ResolvedSchema } from '../contracts/article';
 import { createHttp } from '../core/http';
 import { createLimiterRegistry, sleep } from '../core/limiter';
 import { createLogger, createMemorySink } from '../core/log';
@@ -10,12 +13,15 @@ const TOKEN = 'a'.repeat(64);
 const OTHER = 'b'.repeat(64);
 const HEALTH = 'http://127.0.0.1:8765/health';
 const STATUS = 'http://127.0.0.1:8765/api/v1/status';
+const ARTICLE = 'http://127.0.0.1:8765/api/v1/article?doi=';
 const json = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 
 type Call = { url: string; init: RequestInit };
 
 /** Answers like the real backend: refuses a CORS fetch when `origin` is off, and checks the token. */
-function setup(opts: { off?: boolean; originRefused?: boolean; stored?: unknown; validToken?: string; healthBody?: () => Response } = {}) {
+function setup(
+  opts: { off?: boolean; originRefused?: boolean; stored?: unknown; validToken?: string; healthBody?: () => Response; articleBody?: () => Response } = {},
+) {
   const calls: Call[] = [];
   const fetch = (async (input: RequestInfo | URL, init: RequestInit = {}) => {
     const url = String(input);
@@ -26,7 +32,9 @@ function setup(opts: { off?: boolean; originRefused?: boolean; stored?: unknown;
     if (opts.originRefused) throw new TypeError('Failed to fetch');
     if (url === HEALTH) return opts.healthBody?.() ?? json({ ok: true, version: '0.1.0' });
     const token = new Headers(init.headers).get('X-BVG-Token');
-    return token === (opts.validToken ?? TOKEN) ? json({ paired: true }) : json({ error: 'UNAUTHORIZED' }, 401);
+    if (token !== (opts.validToken ?? TOKEN)) return json({ error: 'UNAUTHORIZED' }, 401);
+    if (url.startsWith(ARTICLE)) return opts.articleBody?.() ?? json(PLOS);
+    return json({ paired: true });
   }) as typeof globalThis.fetch;
   const http = createHttp({
     fetch,
@@ -129,6 +137,50 @@ describe('backend client: pairing', () => {
     const { client, stored } = setup({ off: true });
     expect(code(await client.pair(TOKEN, newRunId()))).toBe('BACKEND_OFF');
     expect(stored()).toBeUndefined();
+  });
+});
+
+describe('backend client: article (OP3)', () => {
+  it('OP3-CON-02 the recorded backend answers parse, with the fields OP12 and OP4 read', () => {
+    for (const body of [PLOS, SPM]) expect(ResolvedSchema.safeParse(body).success).toBe(true);
+    const plos = ResolvedSchema.parse(PLOS).article;
+    expect([plos.type, plos.pmcid, plos.abstract?.slice(0, 25)]).toEqual(['article', 'PMC5646769', 'Global declines in insect']);
+  });
+
+  it('OP3-UNIT-01 article() asks the backend for one DOI, encoded, with the token and run id, and returns the article', async () => {
+    const { client, calls } = setup({ stored: TOKEN });
+    const run = newRunId();
+    const doi = '10.1002/(sici)1096-8644(199601)99:1<1::aid-ajpa1>3.0.co;2-1';
+    const result = await client.article(doi, run);
+    expect(result.ok && result.value.article.pmid).toBe('29045418');
+    expect(calls).toHaveLength(1);
+    const url = new URL(calls[0]?.url ?? '');
+    expect([url.host, url.pathname, [...url.searchParams.keys()], url.searchParams.get('doi')]).toEqual(['127.0.0.1:8765', '/api/v1/article', ['doi'], doi]);
+    const headers = new Headers(calls[0]?.init.headers);
+    expect([headers.get('X-BVG-Token'), headers.get('X-BVG-Run-Id')]).toEqual([TOKEN, run]);
+  });
+
+  it('OP3-UNIT-12 backend answers map to codes the panel can explain', async () => {
+    const cases: Array<[() => Response, string]> = [
+      [() => json({ error: 'NOT_FOUND' }, 404), 'NOT_FOUND'],
+      [() => json({ error: 'UPSTREAM_DOWN' }, 503), 'UPSTREAM_DOWN'],
+      [() => json({ error: 'UPSTREAM_INVALID' }, 502), 'UPSTREAM_INVALID'],
+      [() => json({ article: { title: 'missing fields' }, stale: false, saved: true }), 'UPSTREAM_INVALID'],
+      [() => new Response('{'), 'UPSTREAM_INVALID'],
+      [() => json({ error: 'BAD_DOI' }, 400), 'UPSTREAM_INVALID'],
+    ];
+    for (const [articleBody, expected] of cases) {
+      const { client } = setup({ stored: TOKEN, articleBody });
+      expect(code(await client.article('10.1/x', newRunId())), expected).toBe(expected);
+    }
+    expect(code(await setup({ stored: OTHER }).client.article('10.1/x', newRunId()))).toBe('TOKEN_REJECTED');
+    expect(code(await setup({ stored: TOKEN, off: true }).client.article('10.1/x', newRunId()))).toBe('BACKEND_OFF');
+  });
+
+  it('OP3-UNIT-12 without a usable stored token nothing is sent', async () => {
+    const { client, calls } = setup({ stored: 'nope' });
+    expect(code(await client.article('10.1/x', newRunId()))).toBe('UNPAIRED');
+    expect(calls).toEqual([]);
   });
 });
 

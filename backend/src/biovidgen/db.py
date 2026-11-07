@@ -31,6 +31,14 @@ MIGRATIONS: list[str] = [
     );
     CREATE INDEX summaries_doi ON summaries(doi, created_at);
     """,
+    """
+    CREATE TABLE articles (
+      doi TEXT PRIMARY KEY,
+      fetched_at TEXT NOT NULL,
+      body TEXT NOT NULL
+    );
+    CREATE INDEX articles_fetched_at ON articles(fetched_at);
+    """,
 ]
 SCHEMA_VERSION = len(MIGRATIONS)
 

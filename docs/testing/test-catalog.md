@@ -365,14 +365,14 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP3-UNIT-01 | UNIT | precedence table | each field's source order applied | PR |
 | OP3-UNIT-02 | UNIT | abstract reconstruction | inverted index → text; empty → null | PR |
 | OP3-UNIT-03 | UNIT | missing abstract (publisher-withheld) | null, `coverage` reflects | PR |
-| OP3-UNIT-04 | UNIT | DOI only in Crossref (new paper) | Article from Crossref, `sources:["crossref"]` | PR |
+| OP3-UNIT-04 | UNIT | DOI not in OpenAlex (D36: OpenAlex only) | `NOT_FOUND`; no other host asked | PR |
 | OP3-UNIT-05 | UNIT | DataCite DOI (e.g., Zenodo 10.5281) | Crossref 404 tolerated; OpenAlex or `NOT_FOUND` | PR |
 | OP3-UNIT-06 | UNIT | OpenAlex merged work (redirect) | follows redirect; stores canonical id | PR |
 | OP3-UNIT-07 | UNIT | >100 authors | full list or truncated with flag [verify OpenAlex truncation] | PR |
 | OP3-UNIT-08 | UNIT | non-Latin / diacritic names | preserved NFC | PR |
 | OP3-UNIT-09 | UNIT | year > current year / null | rejected → null | PR |
 | OP3-UNIT-10 | UNIT | keyword dedupe | casefold dedupe across sources; source tags kept; cap 15 | PR |
-| OP3-UNIT-11 | UNIT | cache fresh / stale / stale + network fail / none + fail | no call / SWR / stale flag / `UPSTREAM_DOWN` | PR |
+| OP3-UNIT-11 | UNIT | cache fresh / stale / stale + network fail / none + fail | no call / refreshed in the request (D36) / stale flag / `UPSTREAM_DOWN` | PR |
 | OP3-UNIT-12 | UNIT | 404 both | `NOT_FOUND`; VW1 shows page meta | PR |
 | OP3-PROP-01 | PROP | reconstruct∘invert = id | all token lists | PR |
 | OP3-PROP-02 | PROP | idempotent upsert | 2 resolves → 1 record | PR |
@@ -380,22 +380,22 @@ Rule: every operation has at least one test of every type, **or** an explicit N/
 | OP3-TYPE-01 | TYPE | Article schema | `[]` vs `null` vs `coverage` semantics | PR |
 | OP3-CON-01 | CON | upstream drift | recorded OpenAlex/Crossref fixtures parse; new unknown field tolerated; removed required field → test red | WEEK (live) |
 | OP3-CON-02 | CON | consumers | OP12 gets `type`; OP4 gets `pmcid`, `abstract` | PR |
-| OP3-SEC-01 | SEC | payload | DOI + key/mailto only | PR |
+| OP3-SEC-01 | SEC | payload | OpenAlex gets the DOI and the field list only; the backend gets the DOI only (e2e) | PR |
 | OP3-SEC-02 | SEC | hostile strings in API data | `<script>` in title rendered as text | PR |
 | OP3-SEC-03 | SEC | oversize / non-JSON / wrong content-type | `UPSTREAM_INVALID`, nothing stored | PR |
-| OP3-SEC-04 | SEC | key redaction | OpenAlex key not in logs | PR |
+| OP3-SEC-04 | SEC | key redaction | no key sent in P0 (D36); log rows hold neither URL nor DOI | PR |
 | OP3-RES-01 | RES | 429 with Retry-After | waits, retries ≤3 | PR |
 | OP3-RES-02 | RES | timeout 5 s | next attempt; final → stale or error | PR |
-| OP3-RES-03 | RES | one host down | other host's data used | PR |
+| OP3-RES-03 | RES | transport (D36: one host) | fixed https origin; redirects stay on it; size cap; fixed headers | PR |
 | OP3-PERF-01 | PERF | warm | p95 ≤50 ms | PR |
 | OP3-PERF-02 | PERF | cold | p95 ≤1.5 s (recorded latency profile) | NIGHT |
 | OP3-PERF-03 | PERF | payload with `select` | ≤30 KB | PR |
 | OP3-VAL-01 | VAL | header coverage vs page meta | ≥ +10 pp | SPIKE |
 | OP3-KPI-01 | KPI | resolve success / coverage | ≥97% / ≥90% | PR (fixtures), PILOT (diagnostics) |
 | OP3-UNIT-13 | UNIT | atomicity | IndexedDB put fails (quota) → no partial record; in-memory Article returned with banner | PR |
-| OP3-UNIT-14 | UNIT | refresh with one host down | previous non-null fields kept when the failing host owned them; `sources` lists only hosts that answered | PR |
+| OP3-UNIT-14 | UNIT | refresh fails or answers garbage (D36) | stored record unchanged; stale copy answered | PR |
 | OP3-PROP-03 | PROP | provenance: merge never invents | every output author/keyword/title value exists in one of the inputs | PR |
-| OP3-INT-02 | INT | stale-while-revalidate | stale record returned at once; background refresh updates Dexie and re-emits `ArticleResolved` | PR |
+| OP3-INT-02 | INT | stale record (D36) | refreshed inside the same request; the answer is the new record | PR |
 | OP3-E2E-01 | E2E | header from recorded API | Playwright route interception serves fixtures → VW1 header populated | PR |
 | OP3-MIG-01 | MIG | Article schema bump | cache drop allowed; next resolve repopulates; old rows never crash reads | PR |
 | OP3-FUZZ-01 | FUZZ | fuzzed upstream JSON | types swapped, nulls, 10k-item arrays → no throw; `UPSTREAM_INVALID` or partial Article | NIGHT |

@@ -1,0 +1,149 @@
+{
+ "article": {
+  "doi": "10.1371/journal.pone.0185809",
+  "openalexId": "W2766208183",
+  "pmid": "29045418",
+  "pmcid": "PMC5646769",
+  "title": "More than 75 percent decline over 27 years in total flying insect biomass in protected areas",
+  "journal": "PLoS ONE",
+  "year": 2017,
+  "authors": [
+   {
+    "name": "Caspar A. Hallmann",
+    "orcid": "0000-0002-4630-0522"
+   },
+   {
+    "name": "Martin Sorg",
+    "orcid": "0000-0001-6406-2778"
+   },
+   {
+    "name": "Eelke Jongejans",
+    "orcid": "0000-0003-1148-7419"
+   },
+   {
+    "name": "H. Siepel",
+    "orcid": "0000-0003-4503-4485"
+   },
+   {
+    "name": "Nick Hofland",
+    "orcid": "0000-0001-6064-1043"
+   },
+   {
+    "name": "Heinz Schwan",
+    "orcid": null
+   },
+   {
+    "name": "Werner Stenmans",
+    "orcid": "0000-0001-8282-4668"
+   },
+   {
+    "name": "Andreas Müller",
+    "orcid": null
+   },
+   {
+    "name": "Hubert Sumser",
+    "orcid": "0000-0002-1375-9257"
+   },
+   {
+    "name": "Thomas Hörren",
+    "orcid": "0000-0003-4062-3707"
+   },
+   {
+    "name": "Dave Goulson",
+    "orcid": "0000-0003-4421-2876"
+   },
+   {
+    "name": "Hans de Kroon",
+    "orcid": "0000-0001-6151-3561"
+   }
+  ],
+  "keywords": [
+   {
+    "term": "flying insects",
+    "source": "openalex_keyword",
+    "score": 0.9520000219345093
+   },
+   {
+    "term": "insect fauna",
+    "source": "openalex_keyword",
+    "score": 0.949999988079071
+   },
+   {
+    "term": "long-term monitoring",
+    "source": "openalex_keyword",
+    "score": 0.7080000042915344
+   },
+   {
+    "term": "protected areas",
+    "source": "openalex_keyword",
+    "score": 0.7549999952316284
+   },
+   {
+    "term": "seasonal decline",
+    "source": "openalex_keyword",
+    "score": 0.7879999876022339
+   },
+   {
+    "term": "ecosystem services",
+    "source": "openalex_keyword",
+    "score": 0.6690000295639038
+   },
+   {
+    "term": "food webs",
+    "source": "openalex_keyword",
+    "score": 0.7379999756813049
+   },
+   {
+    "term": "land use",
+    "source": "openalex_keyword",
+    "score": 0.5640000104904175
+   },
+   {
+    "term": "weather effects",
+    "source": "openalex_keyword",
+    "score": 0.5559999942779541
+   },
+   {
+    "term": "habitat characteristics",
+    "source": "openalex_keyword",
+    "score": 0.5249999761581421
+   },
+   {
+    "term": "Malaise trap",
+    "source": "openalex_keyword",
+    "score": 0.6309999823570251
+   },
+   {
+    "term": "Plant and animal studies",
+    "source": "openalex_topic",
+    "score": 0.8637999892234802
+   },
+   {
+    "term": "Ecology and Vegetation Dynamics Studies",
+    "source": "openalex_topic",
+    "score": 0.10100000351667404
+   },
+   {
+    "term": "Entomological Studies and Ecology",
+    "source": "openalex_topic",
+    "score": 0.006800000090152025
+   }
+  ],
+  "primaryTopic": {
+   "name": "Plant and animal studies",
+   "field": "Agricultural and Biological Sciences"
+  },
+  "type": "article",
+  "abstract": "Global declines in insects have sparked wide interest among scientists, politicians, and the general public. Loss of insect diversity and abundance is expected to provoke cascading effects on food webs and to jeopardize ecosystem services. Our understanding of the extent and underlying causes of this decline is based on the abundance of single species or taxonomic groups only, rather than changes in insect biomass which is more relevant for ecological functioning. Here, we used a standardized protocol to measure total insect biomass using Malaise traps, deployed over 27 years in 63 nature protection areas in Germany (96 unique location-year combinations) to infer on the status and trend of local entomofauna. Our analysis estimates a seasonal decline of 76%, and mid-summer decline of 82% in flying insect biomass over the 27 years of study. We show that this decline is apparent regardless of habitat type, while changes in weather, land use, and habitat characteristics cannot explain this overall decline. This yet unrecognized loss of insect biomass must be taken into account in evaluating declines in abundance of species depending on insects as a food source, and ecosystem functioning in the European landscape.",
+  "oaUrl": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0185809&type=printable",
+  "isOA": true,
+  "coverage": {
+   "authors": "found",
+   "keywords": "found"
+  },
+  "fetchedAt": "2026-11-07T00:00:00.000Z",
+  "schemaVersion": 1
+ },
+ "stale": false,
+ "saved": true
+}

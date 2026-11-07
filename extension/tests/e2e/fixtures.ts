@@ -17,6 +17,8 @@ export interface Captured extends ObservedRequest {
 export interface BackendStub {
   state: 'off' | 'on' | 'origin-refused';
   token: string;
+  /** OP3 answers by DOI; any other DOI is a 404 NOT_FOUND, as when OpenAlex does not have it. */
+  articles: Map<string, unknown>;
 }
 
 /**
@@ -31,8 +33,12 @@ async function answerAsBackend(route: Route, backend: BackendStub): Promise<void
   if (backend.state === 'origin-refused' && headers.origin !== undefined) return route.abort('failed');
   const path = new URL(request.url()).pathname;
   if (path === '/health') return route.fulfill({ status: 200, json: { ok: true, version: '0.1.0' } });
-  const accepted = headers['x-bvg-token'] === backend.token;
-  return accepted ? route.fulfill({ status: 200, json: { paired: true } }) : route.fulfill({ status: 401, json: { error: 'UNAUTHORIZED' } });
+  if (headers['x-bvg-token'] !== backend.token) return route.fulfill({ status: 401, json: { error: 'UNAUTHORIZED' } });
+  if (path === '/api/v1/article') {
+    const found = backend.articles.get(new URL(request.url()).searchParams.get('doi') ?? '');
+    return found === undefined ? route.fulfill({ status: 404, json: { error: 'NOT_FOUND' } }) : route.fulfill({ status: 200, json: found });
+  }
+  return route.fulfill({ status: 200, json: { paired: true } });
 }
 
 /**
@@ -66,7 +72,7 @@ export const test = base.extend<{
   },
   // eslint-disable-next-line no-empty-pattern
   backend: async ({}, use) => {
-    await use({ state: 'off', token: '' });
+    await use({ state: 'off', token: '', articles: new Map() });
   },
   context: async ({ egress, pages, sites, backend }, use) => {
     const context = await chromium.launchPersistentContext('', {

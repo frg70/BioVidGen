@@ -1,0 +1,788 @@
+{
+ "id": "https://openalex.org/W2766208183",
+ "doi": "https://doi.org/10.1371/journal.pone.0185809",
+ "display_name": "More than 75 percent decline over 27 years in total flying insect biomass in protected areas",
+ "publication_year": 2017,
+ "type": "article",
+ "ids": {
+  "openalex": "https://openalex.org/W2766208183",
+  "doi": "https://doi.org/10.1371/journal.pone.0185809",
+  "mag": "2766208183",
+  "pmid": "https://pubmed.ncbi.nlm.nih.gov/29045418",
+  "pmcid": "https://www.ncbi.nlm.nih.gov/pmc/articles/5646769"
+ },
+ "authorships": [
+  {
+   "author_position": "first",
+   "author": {
+    "id": "https://openalex.org/A5091024907",
+    "display_name": "Caspar A. Hallmann",
+    "orcid": "https://orcid.org/0000-0002-4630-0522"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5017241876",
+    "display_name": "Martin Sorg",
+    "orcid": "https://orcid.org/0000-0001-6406-2778"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5091088946",
+    "display_name": "Eelke Jongejans",
+    "orcid": "https://orcid.org/0000-0003-1148-7419"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5067100175",
+    "display_name": "H. Siepel",
+    "orcid": "https://orcid.org/0000-0003-4503-4485"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5061292541",
+    "display_name": "Nick Hofland",
+    "orcid": "https://orcid.org/0000-0001-6064-1043"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5078681701",
+    "display_name": "Heinz Schwan",
+    "orcid": null
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5056157731",
+    "display_name": "Werner Stenmans",
+    "orcid": "https://orcid.org/0000-0001-8282-4668"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": null,
+    "display_name": "Andreas Müller",
+    "orcid": null
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5052056687",
+    "display_name": "Hubert Sumser",
+    "orcid": "https://orcid.org/0000-0002-1375-9257"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5060821342",
+    "display_name": "Thomas Hörren",
+    "orcid": "https://orcid.org/0000-0003-4062-3707"
+   }
+  },
+  {
+   "author_position": "middle",
+   "author": {
+    "id": "https://openalex.org/A5008498925",
+    "display_name": "Dave Goulson",
+    "orcid": "https://orcid.org/0000-0003-4421-2876"
+   }
+  },
+  {
+   "author_position": "last",
+   "author": {
+    "id": "https://openalex.org/A5084712296",
+    "display_name": "Hans de Kroon",
+    "orcid": "https://orcid.org/0000-0001-6151-3561"
+   }
+  }
+ ],
+ "keywords": [
+  {
+   "id": "https://openalex.org/keywords/flying-insects",
+   "display_name": "flying insects",
+   "score": 0.9520000219345093
+  },
+  {
+   "id": "https://openalex.org/keywords/insect-fauna",
+   "display_name": "insect fauna",
+   "score": 0.949999988079071
+  },
+  {
+   "id": "https://openalex.org/keywords/long-term-monitoring",
+   "display_name": "long-term monitoring",
+   "score": 0.7080000042915344
+  },
+  {
+   "id": "https://openalex.org/keywords/protected-areas",
+   "display_name": "protected areas",
+   "score": 0.7549999952316284
+  },
+  {
+   "id": "https://openalex.org/keywords/seasonal-decline",
+   "display_name": "seasonal decline",
+   "score": 0.7879999876022339
+  },
+  {
+   "id": "https://openalex.org/keywords/ecosystem-services",
+   "display_name": "ecosystem services",
+   "score": 0.6690000295639038
+  },
+  {
+   "id": "https://openalex.org/keywords/food-webs",
+   "display_name": "food webs",
+   "score": 0.7379999756813049
+  },
+  {
+   "id": "https://openalex.org/keywords/land-use",
+   "display_name": "land use",
+   "score": 0.5640000104904175
+  },
+  {
+   "id": "https://openalex.org/keywords/weather-effects",
+   "display_name": "weather effects",
+   "score": 0.5559999942779541
+  },
+  {
+   "id": "https://openalex.org/keywords/habitat-characteristics",
+   "display_name": "habitat characteristics",
+   "score": 0.5249999761581421
+  },
+  {
+   "id": "https://openalex.org/keywords/malaise-trap",
+   "display_name": "Malaise trap",
+   "score": 0.6309999823570251
+  }
+ ],
+ "topics": [
+  {
+   "id": "https://openalex.org/T10487",
+   "display_name": "Plant and animal studies",
+   "score": 0.8637999892234802,
+   "subfield": {
+    "id": "https://openalex.org/subfields/1105",
+    "display_name": "Ecology, Evolution, Behavior and Systematics"
+   },
+   "field": {
+    "id": "https://openalex.org/fields/11",
+    "display_name": "Agricultural and Biological Sciences"
+   },
+   "domain": {
+    "id": "https://openalex.org/domains/1",
+    "display_name": "Life Sciences"
+   }
+  },
+  {
+   "id": "https://openalex.org/T10005",
+   "display_name": "Ecology and Vegetation Dynamics Studies",
+   "score": 0.10100000351667404,
+   "subfield": {
+    "id": "https://openalex.org/subfields/2309",
+    "display_name": "Nature and Landscape Conservation"
+   },
+   "field": {
+    "id": "https://openalex.org/fields/23",
+    "display_name": "Environmental Science"
+   },
+   "domain": {
+    "id": "https://openalex.org/domains/3",
+    "display_name": "Physical Sciences"
+   }
+  },
+  {
+   "id": "https://openalex.org/T14378",
+   "display_name": "Entomological Studies and Ecology",
+   "score": 0.006800000090152025,
+   "subfield": {
+    "id": "https://openalex.org/subfields/1105",
+    "display_name": "Ecology, Evolution, Behavior and Systematics"
+   },
+   "field": {
+    "id": "https://openalex.org/fields/11",
+    "display_name": "Agricultural and Biological Sciences"
+   },
+   "domain": {
+    "id": "https://openalex.org/domains/1",
+    "display_name": "Life Sciences"
+   }
+  }
+ ],
+ "primary_topic": {
+  "id": "https://openalex.org/T10487",
+  "display_name": "Plant and animal studies",
+  "score": 0.8637999892234802,
+  "subfield": {
+   "id": "https://openalex.org/subfields/1105",
+   "display_name": "Ecology, Evolution, Behavior and Systematics"
+  },
+  "field": {
+   "id": "https://openalex.org/fields/11",
+   "display_name": "Agricultural and Biological Sciences"
+  },
+  "domain": {
+   "id": "https://openalex.org/domains/1",
+   "display_name": "Life Sciences"
+  }
+ },
+ "primary_location": {
+  "id": "doi:10.1371/journal.pone.0185809",
+  "doi": "https://doi.org/10.1371/journal.pone.0185809",
+  "is_oa": true,
+  "landing_page_url": "https://doi.org/10.1371/journal.pone.0185809",
+  "pdf_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0185809&type=printable",
+  "source": {
+   "id": "https://openalex.org/S202381698",
+   "display_name": "PLoS ONE",
+   "issn_l": "1932-6203",
+   "issn": [
+    "1932-6203"
+   ],
+   "is_oa": true,
+   "is_in_doaj": true,
+   "is_core": true,
+   "listed_in": [
+    "anvur-class-a",
+    "anvur-scientific",
+    "cwts-core",
+    "doaj",
+    "dongbi-c",
+    "doyens",
+    "erih-plus",
+    "jufo-1",
+    "ki-jl-1",
+    "medline",
+    "norway-1",
+    "poland-100",
+    "russia-white-list-1",
+    "vabb-shw"
+   ],
+   "host_organization": "https://openalex.org/P4310315706",
+   "host_organization_name": "Public Library of Science",
+   "host_organization_lineage": [
+    "https://openalex.org/P4310315706"
+   ],
+   "host_organization_lineage_names": [
+    "Public Library of Science"
+   ],
+   "type": "journal"
+  },
+  "license": "cc-by",
+  "license_id": "https://openalex.org/licenses/cc-by",
+  "version": "publishedVersion",
+  "is_accepted": true,
+  "is_published": true,
+  "raw_source_name": "PLOS ONE",
+  "raw_type": "journal-article"
+ },
+ "best_oa_location": {
+  "id": "doi:10.1371/journal.pone.0185809",
+  "doi": "https://doi.org/10.1371/journal.pone.0185809",
+  "is_oa": true,
+  "landing_page_url": "https://doi.org/10.1371/journal.pone.0185809",
+  "pdf_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0185809&type=printable",
+  "source": {
+   "id": "https://openalex.org/S202381698",
+   "display_name": "PLoS ONE",
+   "issn_l": "1932-6203",
+   "issn": [
+    "1932-6203"
+   ],
+   "is_oa": true,
+   "is_in_doaj": true,
+   "is_core": true,
+   "listed_in": [
+    "anvur-class-a",
+    "anvur-scientific",
+    "cwts-core",
+    "doaj",
+    "dongbi-c",
+    "doyens",
+    "erih-plus",
+    "jufo-1",
+    "ki-jl-1",
+    "medline",
+    "norway-1",
+    "poland-100",
+    "russia-white-list-1",
+    "vabb-shw"
+   ],
+   "host_organization": "https://openalex.org/P4310315706",
+   "host_organization_name": "Public Library of Science",
+   "host_organization_lineage": [
+    "https://openalex.org/P4310315706"
+   ],
+   "host_organization_lineage_names": [
+    "Public Library of Science"
+   ],
+   "type": "journal"
+  },
+  "license": "cc-by",
+  "license_id": "https://openalex.org/licenses/cc-by",
+  "version": "publishedVersion",
+  "is_accepted": true,
+  "is_published": true,
+  "raw_source_name": "PLOS ONE",
+  "raw_type": "journal-article"
+ },
+ "open_access": {
+  "is_oa": true,
+  "oa_status": "gold",
+  "oa_url": "https://journals.plos.org/plosone/article/file?id=10.1371/journal.pone.0185809&type=printable",
+  "any_repository_has_fulltext": true
+ },
+ "abstract_inverted_index": {
+  "27": [
+   87,
+   129
+  ],
+  "63": [
+   90
+  ],
+  "Global": [
+   0
+  ],
+  "declines": [
+   1,
+   172
+  ],
+  "in": [
+   2,
+   61,
+   89,
+   94,
+   123,
+   146,
+   170,
+   173,
+   187
+  ],
+  "insects": [
+   3,
+   179
+  ],
+  "have": [
+   4
+  ],
+  "sparked": [
+   5
+  ],
+  "wide": [
+   6
+  ],
+  "interest": [
+   7
+  ],
+  "among": [
+   8
+  ],
+  "scientists,": [
+   9
+  ],
+  "politicians,": [
+   10
+  ],
+  "and": [
+   11,
+   19,
+   30,
+   40,
+   105,
+   118,
+   150,
+   184
+  ],
+  "the": [
+   12,
+   38,
+   49,
+   103,
+   128,
+   188
+  ],
+  "general": [
+   13
+  ],
+  "public.": [
+   14
+  ],
+  "Loss": [
+   15
+  ],
+  "of": [
+   16,
+   37,
+   43,
+   51,
+   107,
+   116,
+   121,
+   131,
+   141,
+   162,
+   175
+  ],
+  "insect": [
+   17,
+   62,
+   80,
+   125,
+   163
+  ],
+  "diversity": [
+   18
+  ],
+  "abundance": [
+   20,
+   50,
+   174
+  ],
+  "is": [
+   21,
+   46,
+   65,
+   138
+  ],
+  "expected": [
+   22
+  ],
+  "to": [
+   23,
+   31,
+   77,
+   100
+  ],
+  "provoke": [
+   24
+  ],
+  "cascading": [
+   25
+  ],
+  "effects": [
+   26
+  ],
+  "on": [
+   27,
+   48,
+   102,
+   178
+  ],
+  "food": [
+   28,
+   182
+  ],
+  "webs": [
+   29
+  ],
+  "jeopardize": [
+   32
+  ],
+  "ecosystem": [
+   33,
+   185
+  ],
+  "services.": [
+   34
+  ],
+  "Our": [
+   35,
+   110
+  ],
+  "understanding": [
+   36
+  ],
+  "extent": [
+   39
+  ],
+  "underlying": [
+   41
+  ],
+  "causes": [
+   42
+  ],
+  "this": [
+   44,
+   136,
+   155
+  ],
+  "decline": [
+   45,
+   115,
+   120,
+   137
+  ],
+  "based": [
+   47
+  ],
+  "single": [
+   52
+  ],
+  "species": [
+   53,
+   176
+  ],
+  "or": [
+   54
+  ],
+  "taxonomic": [
+   55
+  ],
+  "groups": [
+   56
+  ],
+  "only,": [
+   57
+  ],
+  "rather": [
+   58
+  ],
+  "than": [
+   59
+  ],
+  "changes": [
+   60,
+   145
+  ],
+  "biomass": [
+   63,
+   81,
+   126,
+   164
+  ],
+  "which": [
+   64
+  ],
+  "more": [
+   66
+  ],
+  "relevant": [
+   67
+  ],
+  "for": [
+   68
+  ],
+  "ecological": [
+   69
+  ],
+  "functioning.": [
+   70
+  ],
+  "Here,": [
+   71
+  ],
+  "we": [
+   72
+  ],
+  "used": [
+   73
+  ],
+  "a": [
+   74,
+   113,
+   181
+  ],
+  "standardized": [
+   75
+  ],
+  "protocol": [
+   76
+  ],
+  "measure": [
+   78
+  ],
+  "total": [
+   79
+  ],
+  "using": [
+   82
+  ],
+  "Malaise": [
+   83
+  ],
+  "traps,": [
+   84
+  ],
+  "deployed": [
+   85
+  ],
+  "over": [
+   86,
+   127
+  ],
+  "years": [
+   88,
+   130
+  ],
+  "nature": [
+   91
+  ],
+  "protection": [
+   92
+  ],
+  "areas": [
+   93
+  ],
+  "Germany": [
+   95
+  ],
+  "(96": [
+   96
+  ],
+  "unique": [
+   97
+  ],
+  "location-year": [
+   98
+  ],
+  "combinations)": [
+   99
+  ],
+  "infer": [
+   101
+  ],
+  "status": [
+   104
+  ],
+  "trend": [
+   106
+  ],
+  "local": [
+   108
+  ],
+  "entomofauna.": [
+   109
+  ],
+  "analysis": [
+   111
+  ],
+  "estimates": [
+   112
+  ],
+  "seasonal": [
+   114
+  ],
+  "76%,": [
+   117
+  ],
+  "mid-summer": [
+   119
+  ],
+  "82%": [
+   122
+  ],
+  "flying": [
+   124
+  ],
+  "study.": [
+   132
+  ],
+  "We": [
+   133
+  ],
+  "show": [
+   134
+  ],
+  "that": [
+   135
+  ],
+  "apparent": [
+   139
+  ],
+  "regardless": [
+   140
+  ],
+  "habitat": [
+   142,
+   151
+  ],
+  "type,": [
+   143
+  ],
+  "while": [
+   144
+  ],
+  "weather,": [
+   147
+  ],
+  "land": [
+   148
+  ],
+  "use,": [
+   149
+  ],
+  "characteristics": [
+   152
+  ],
+  "cannot": [
+   153
+  ],
+  "explain": [
+   154
+  ],
+  "overall": [
+   156
+  ],
+  "decline.": [
+   157
+  ],
+  "This": [
+   158
+  ],
+  "yet": [
+   159
+  ],
+  "unrecognized": [
+   160
+  ],
+  "loss": [
+   161
+  ],
+  "must": [
+   165
+  ],
+  "be": [
+   166
+  ],
+  "taken": [
+   167
+  ],
+  "into": [
+   168
+  ],
+  "account": [
+   169
+  ],
+  "evaluating": [
+   171
+  ],
+  "depending": [
+   177
+  ],
+  "as": [
+   180
+  ],
+  "source,": [
+   183
+  ],
+  "functioning": [
+   186
+  ],
+  "European": [
+   189
+  ],
+  "landscape.": [
+   190
+  ]
+ }
+}

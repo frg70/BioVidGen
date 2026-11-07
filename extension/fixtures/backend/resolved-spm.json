@@ -1,0 +1,132 @@
+{
+ "article": {
+  "doi": "10.21149/16606",
+  "openalexId": "W7129062788",
+  "pmid": "41698265",
+  "pmcid": null,
+  "title": "Economic impact of timely diagnosis and early referral in comprehensive cancer care in Mexico: the DERIVA strategy",
+  "journal": "Salud Pública de México",
+  "year": 2026,
+  "authors": [
+   {
+    "name": "Óscar Arrieta",
+    "orcid": "0000-0002-1164-3779"
+   },
+   {
+    "name": "Ana Pamela Gómez-García",
+    "orcid": "0000-0002-9392-1647"
+   },
+   {
+    "name": "Karla Adriana Espinosa-Bautista",
+    "orcid": null
+   },
+   {
+    "name": "Juan Gabriel Gay-Molina",
+    "orcid": null
+   },
+   {
+    "name": "Luis A. Ortiz-Blas",
+    "orcid": null
+   },
+   {
+    "name": "Claudia Arce-Salinas",
+    "orcid": "0000-0001-9860-3739"
+   },
+   {
+    "name": "Héctor Martínez‐Said",
+    "orcid": "0000-0002-9881-4592"
+   },
+   {
+    "name": "Héctor Valle-Mesto",
+    "orcid": null
+   },
+   {
+    "name": "Nancy Reynoso‐Noverón",
+    "orcid": "0000-0002-7784-2287"
+   }
+  ],
+  "keywords": [
+   {
+    "term": "early cancer detection",
+    "source": "openalex_keyword",
+    "score": 0.8709999918937683
+   },
+   {
+    "term": "early referral",
+    "source": "openalex_keyword",
+    "score": 0.671999990940094
+   },
+   {
+    "term": "comprehensive cancer care",
+    "source": "openalex_keyword",
+    "score": 0.7590000033378601
+   },
+   {
+    "term": "cost reduction",
+    "source": "openalex_keyword",
+    "score": 0.7300000190734863
+   },
+   {
+    "term": "breast cancer",
+    "source": "openalex_keyword",
+    "score": 0.8399999737739563
+   },
+   {
+    "term": "colorectal cancer",
+    "source": "openalex_keyword",
+    "score": 0.9950000047683716
+   },
+   {
+    "term": "lung cancer",
+    "source": "openalex_keyword",
+    "score": 1.0
+   },
+   {
+    "term": "tumor staging",
+    "source": "openalex_keyword",
+    "score": 0.8659999966621399
+   },
+   {
+    "term": "health system sustainability",
+    "source": "openalex_keyword",
+    "score": 0.6480000019073486
+   },
+   {
+    "term": "Mexico",
+    "source": "openalex_keyword",
+    "score": 0.7639999985694885
+   },
+   {
+    "term": "Economic and Financial Impacts of Cancer",
+    "source": "openalex_topic",
+    "score": 0.8622999787330627
+   },
+   {
+    "term": "Global Cancer Incidence and Screening",
+    "source": "openalex_topic",
+    "score": 0.11760000139474869
+   },
+   {
+    "term": "Health Systems, Economic Evaluations, Quality of Life",
+    "source": "openalex_topic",
+    "score": 0.015399999916553497
+   }
+  ],
+  "primaryTopic": {
+   "name": "Economic and Financial Impacts of Cancer",
+   "field": "Economics, Econometrics and Finance"
+  },
+  "type": "article",
+  "abstract": null,
+  "oaUrl": "https://doi.org/10.21149/16606",
+  "isOA": true,
+  "coverage": {
+   "authors": "found",
+   "keywords": "found"
+  },
+  "fetchedAt": "2026-11-07T00:00:00.000Z",
+  "schemaVersion": 1
+ },
+ "stale": false,
+ "saved": true
+}

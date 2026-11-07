@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import { ArticleSchema, ResolvedSchema } from './article';
 import { PageContextSchema } from './page-context';
 import { ArticleTextSchema, IntroDraftSchema, SectionDraftSchema, SummarySchema } from './pipeline';
 
@@ -12,4 +13,6 @@ export const contracts: Readonly<Record<string, z.ZodType>> = {
   IntroDraft: IntroDraftSchema,
   Summary: SummarySchema,
   PageContext: PageContextSchema,
+  Article: ArticleSchema,
+  Resolved: ResolvedSchema,
 };
