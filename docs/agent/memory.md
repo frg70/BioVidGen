@@ -41,7 +41,7 @@ Update this file at the end of every working session, in the same PR as the work
   - validate p50 ~37-45 ms, p95 ~40-56 ms on this machine (target 20 ms, fail line 100 ms: target missed, fail line met);
   - mutation 93.9% (248/264, target 90%; evidence.py 106/106). 7 kills are hangs in loop mutants; without them 91.3%. All 16 survivors read as equivalent (list in `docs/runbooks/op5v.md`). The first run (88.3%) found a real gap: nothing tested the whole-cluster rule, so "dose of 1" against "dose of ½" went unguarded. The code was right; tests added;
   - 1,788 backend tests;
-  - no HTTP endpoint yet (step 3). No scheduled mutation job (the catalog gates OP5V-MUT-01 nightly).
+  - no HTTP endpoint yet (step 3). Mutation runs nightly since 2026-11-07 (`nightly.yml`).
   - catalog OP5V 38/45 (open: HYP-02, VAL-01, KPI-02 need eval or a pilot; E2E-01, A11Y-01, CON-01 need VW1 and OP13; MIG-01 needs a schema bump). BE0 15/15. 21 e2e pass.
 - [x] **BE1 extension client** (ADR-0010 step 3) on `feat/be1-extension-client`, stacked on PR #2:
   - the panel checks the backend when it opens, names what is wrong (off, id not allowed, no token, token refused) and pairs by pasted token;
@@ -53,7 +53,8 @@ Update this file at the end of every working session, in the same PR as the work
   - spike (`backend/scripts/spike_op3.py`), 204 MEDLINE + 200 Latin American DOIs: authors 99.0/98.0%, keywords or topics 99.0/99.5%, Crossref gain +0 pp, both-host p95 0.78/0.71 s, payload p95 22/20 KB. Regional journals: PMCID only 13.5%;
   - `GET /api/v1/article?doi=`; SQLite cache 30 d fresh, 90 d kept; single flight; stdlib transport with a total deadline, redirects pinned to the origin, 2 MB cap;
   - panel header (authors, journal, year, type, keywords, topic) once paired; typed DOIs are now checked;
-  - 49 backend OP3 tests, 1,837 backend total; 165 unit, 28 e2e; catalog OP3 37/43 (open: spike rows, nightly PERF-02 and MUT-01).
+  - 62 backend OP3 tests, 1,850 backend total; 165 unit, 28 e2e; catalog OP3 39/43 (open: spike rows only);
+  - mutation 98.1% (target 80%); first run 80.6% found 18 untested cut points and limits. Nightly workflow `nightly.yml` runs OP3-PERF-02 and the OP5V and OP3 mutation runs (first run happens after merge to main).
 - [ ] **Next:** OP12 Status (panel path) → OP4 Text (DOM only) → OP5 stub → OP13 Export.
 - [ ] VW5 Diagnostics → VW3 Options (basic) → VW1 Paper panel skeleton.
 - [ ] **P0 exit:**
@@ -191,6 +192,7 @@ Append as you find them, one line each, with the date.
 - 2026-11-06: Green on Windows is not green on Linux: CI's first run failed 7 e2e tests that always passed here.
 - 2026-11-07: urllib's `timeout` limits each socket read, not the request: one spike call took 752 s with `timeout=15`. The backend checks a deadline between `read1` calls.
 - 2026-11-07: PowerShell: `R` is an alias of Invoke-History, so a helper function named `R` silently does nothing. Use the edit tool.
+- 2026-11-07: Timing tests fail while a mutation run holds the cores (OP3-RES-02 took >1.5 s): bounds now leave room; do not run timing tests next to a mutation run.
 - 2026-11-07: e2e OP1-UNIT-10 failed once in a full run and passed alone and on the rerun (load).
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).
 

@@ -159,7 +159,7 @@ def test_op3_unit_08_names_are_nfc() -> None:
 
 
 @pytest.mark.parametrize(
-    ("raw", "expected"), [(2017, 2017), (YEAR, YEAR), (YEAR + 1, None), (2999, None), (0, None), (None, None)]
+    ("raw", "expected"), [(2017, 2017), (1, 1), (YEAR, YEAR), (YEAR + 1, None), (2999, None), (0, None), (None, None)]
 )
 def test_op3_unit_09_year_bounds(raw: int | None, expected: int | None) -> None:
     """OP3-UNIT-09 a year after the current one, zero or missing becomes null."""
@@ -183,6 +183,79 @@ def test_op3_unit_10_keywords_deduped_tagged_capped() -> None:
     ]
     none = article_of({**PLOS, "keywords": [], "topics": None})
     assert none.keywords == [] and none.coverage.keywords == "none_found"
+
+
+def test_op3_unit_10_cut_points_are_exact() -> None:
+    """OP3-UNIT-10 a keyword scored exactly 0.3 is kept; only the first 3 topics are used."""
+    topics = [{"display_name": f"topic {i}", "score": 0.9} for i in range(5)]
+    a = article_of({**PLOS, "keywords": [{"display_name": "edge", "score": 0.3}], "topics": topics})
+    assert [k.term for k in a.keywords] == ["edge", "topic 0", "topic 1", "topic 2"]
+
+
+@pytest.mark.parametrize(
+    ("field", "limit"),
+    [
+        ("display_name", 2000),
+        ("author", 500),
+        ("journal", 500),
+        ("type", 500),
+        ("topic", 500),
+        ("field", 500),
+        ("keyword", 500),
+    ],
+)
+def test_op3_unit_08_long_text_is_cut_at_its_limit(field: str, limit: int) -> None:
+    """OP3-UNIT-08 text one character over its limit is cut to exactly the limit, never refused."""
+    long = "x" * (limit + 1)
+    work = {
+        "display_name": {"display_name": long},
+        "author": {"authorships": [{"author": {"display_name": long}}]},
+        "journal": {"primary_location": {"source": {"display_name": long}}},
+        "type": {"type": long},
+        "topic": {"primary_topic": {"display_name": long}},
+        "field": {"primary_topic": {"display_name": "t", "field": {"display_name": long}}},
+        "keyword": {"keywords": [{"display_name": long, "score": 0.9}], "topics": []},
+    }[field]
+    a = article_of({**PLOS, **work})
+    got = {
+        "display_name": a.title,
+        "author": a.authors[0].name,
+        "journal": a.journal,
+        "type": a.type,
+        "topic": a.primaryTopic and a.primaryTopic.name,
+        "field": a.primaryTopic and a.primaryTopic.field,
+        "keyword": a.keywords[0].term,
+    }[field]
+    assert got == "x" * limit
+
+
+def test_op3_unit_02_abstract_limits() -> None:
+    """OP3-UNIT-02 an abstract at the word cap is kept, one word over gives null; text is cut at 50,000 characters."""
+    at_cap = {f"w{i}": [i] for i in range(20_000)}
+    assert reconstruct(at_cap) is not None
+    assert reconstruct({**at_cap, "extra": [20_000]}) is None
+    assert reconstruct({"lost": [-1]}) is None
+    long = article_of({**PLOS, "abstract_inverted_index": {"y" * 50_001: [0]}})
+    assert long.abstract == "y" * 50_000
+
+
+def test_op3_type_01_oa_url_limit_and_scheme() -> None:
+    """OP3-TYPE-01 an OA link of exactly 2,048 characters is kept; longer, or not http(s), gives null."""
+    base = "https://x.org/"
+    for length, kept in ((2048, True), (2049, False)):
+        url = base + "a" * (length - len(base))
+        a = article_of({**PLOS, "best_oa_location": {"pdf_url": url}})
+        assert (a.oaUrl == url) is kept
+    assert article_of({**PLOS, "best_oa_location": {"pdf_url": "javascript:alert(1)"}}).oaUrl is None
+
+
+def test_op3_unit_08_lone_surrogates_are_storable(tmp_path: Path) -> None:
+    """OP3-UNIT-08 a lone surrogate (valid JSON, invalid UTF-8) becomes "?" so the article can be stored."""
+    body = json.dumps({**PLOS, "display_name": "Bad \ud800 title"}).encode()
+    resolver, db = make(tmp_path, FakeFetch(ok(body)))
+    got = resolver.resolve(PLOS_DOI, new_run_id())
+    assert not isinstance(got, str) and got.saved and got.article.title == "Bad ? title"
+    assert len(rows(db)) == 1
 
 
 def test_op3_unit_11_cache_fresh_stale_and_failures(tmp_path: Path) -> None:
@@ -351,6 +424,8 @@ def test_op3_con_01_recorded_answers_parse_and_drift() -> None:
     assert isinstance(parse_work(ok({**PLOS, "brand_new_field": {"x": 1}})), OpenAlexWork)
     without_id = {k: v for k, v in PLOS.items() if k != "id"}
     assert parse_work(ok(without_id)) == "UPSTREAM_INVALID"
+    for not_a_work in (ok(PLOS, 404), ok(PLOS, 200, "text/html"), "TIMEOUT"):
+        assert parse_work(not_a_work) == "UPSTREAM_INVALID"
 
 
 def test_op3_con_02_consumers_get_their_fields() -> None:
@@ -460,7 +535,7 @@ def test_op3_res_02_deadline_is_total() -> None:
         h.send_header("Content-Type", "application/json")
         h.send_header("Content-Length", "1000000")
         h.end_headers()
-        for _ in range(100):
+        for _ in range(300):  # 30 s in all; without a total deadline the fetch would wait for every byte
             h.wfile.write(b" ")
             h.wfile.flush()
             time.sleep(0.1)
@@ -469,7 +544,8 @@ def test_op3_res_02_deadline_is_total() -> None:
     try:
         start = time.monotonic()
         got = oh.fetch_once(f"{base}/w", allowed=frozenset({base}), timeout_s=0.5)
-        assert got == "TIMEOUT" and time.monotonic() - start < 1.5
+        # Expected about 0.75 s (deadline plus one read timeout); the bound leaves room for a loaded machine.
+        assert got == "TIMEOUT" and time.monotonic() - start < 4
     finally:
         server.shutdown()
 
@@ -528,6 +604,25 @@ def test_op3_perf_01_warm_p95(tmp_path: Path) -> None:
         resolver.resolve(PLOS_DOI, new_run_id())
         times.append(time.perf_counter() - start)
     assert statistics.quantiles(times, n=20)[18] <= 0.050
+
+
+@pytest.mark.nightly
+def test_op3_perf_02_cold_p95_on_recorded_latency(tmp_path: Path) -> None:
+    """OP3-PERF-02 cold resolve p95 ≤ 1.5 s when OpenAlex answers with the latencies the spike recorded (51 of 204)."""
+    profile = json.loads((FIXTURES / "latency-profile.json").read_text("utf-8"))["seconds"][::4]
+
+    def recorded(_: str) -> tuple[oh.Answer, int]:
+        time.sleep(profile[len(times)])
+        return ok(PLOS), 1
+
+    resolver, _ = make(tmp_path, recorded)
+    times: list[float] = []
+    for i in range(len(profile)):
+        start = time.perf_counter()
+        got = resolver.resolve(f"10.5555/cold.{i}", new_run_id())
+        times.append(time.perf_counter() - start)
+        assert not isinstance(got, str)
+    assert statistics.quantiles(times, n=20)[18] <= 1.5
 
 
 def test_op3_perf_03_select_keeps_payload_small() -> None:

@@ -1,4 +1,4 @@
-"""Mutation testing for OP5V (OP5V-MUT-01). `uv run python scripts/mutation_run.py`
+"""Mutation testing (OP5V-MUT-01, OP3-MUT-01). `uv run python scripts/mutation_run.py [--unit op5v|op3]`
 
 Standard library only. mutmut does not run on native Windows, which the team uses, and cosmic-ray pulls in an
 LGPL package that the licence gate refuses (delta D34). Every mutant runs on a temporary copy, so an interrupted
@@ -21,12 +21,31 @@ from queue import Queue
 
 BACKEND = Path(__file__).resolve().parents[1]
 REPO = BACKEND.parent
-TARGETS = ("normaliser.py", "evidence.py", "validate.py")
-SUMMARY = Path("src/biovidgen/summary")
-TESTS = ("tests/test_op5v_vectors.py", "tests/test_op5v_store.py", "tests/test_op5v_properties.py")
-# The version guard would kill every normaliser mutant for the wrong reason, and timing proves nothing here.
-DESELECT = "not version_guard and not performance"
 TIMEOUT_S = 300
+
+
+@dataclass(frozen=True)
+class Unit:
+    folder: Path
+    targets: tuple[str, ...]
+    tests: tuple[str, ...]
+    deselect: str  # timing tests prove nothing under mutation, and guards that kill every mutant hide real gaps
+    target: float  # catalog score
+
+
+UNITS = {
+    "op5v": Unit(
+        Path("src/biovidgen/summary"),
+        ("normaliser.py", "evidence.py", "validate.py"),
+        ("tests/test_op5v_vectors.py", "tests/test_op5v_store.py", "tests/test_op5v_properties.py"),
+        "not version_guard and not performance",
+        90.0,
+    ),
+    # Merge and reconstruct (catalog OP3-MUT-01). The trickle-server and warm-latency tests only measure time.
+    "op3": Unit(
+        Path("src/biovidgen/scholarly"), ("openalex.py",), ("tests/test_op3.py",), "not res_02 and not perf_01", 80.0
+    ),
+}
 
 _COMPARE = {
     ast.Eq: ast.NotEq,
@@ -151,11 +170,12 @@ def _workspace(root: Path) -> Path:
     shutil.copytree(BACKEND / "src", backend / "src", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copytree(BACKEND / "tests", backend / "tests", ignore=shutil.ignore_patterns("__pycache__"))
     shutil.copy(BACKEND / "pyproject.toml", backend)
-    shutil.copytree(REPO / "extension/fixtures/op5v", root / "extension/fixtures/op5v")
+    for shared in ("op5v", "backend"):
+        shutil.copytree(REPO / "extension/fixtures" / shared, root / "extension/fixtures" / shared)
     return backend
 
 
-def _pytest(backend: Path) -> int:
+def _pytest(backend: Path, unit: Unit) -> int:
     env = {
         **os.environ,
         "PYTHONPATH": str(backend / "src"),
@@ -170,9 +190,9 @@ def _pytest(backend: Path) -> int:
         "--no-header",
         "-p",
         "no:cacheprovider",
-        *TESTS,
+        *unit.tests,
         "-k",
-        DESELECT,
+        unit.deselect,
     ]
     try:
         done = subprocess.run(command, cwd=backend, env=env, capture_output=True, timeout=TIMEOUT_S, check=False)  # noqa: S603
@@ -184,28 +204,31 @@ def _pytest(backend: Path) -> int:
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--workers", type=int, default=4)
-    parser.add_argument("--target", type=float, default=90.0)
+    parser.add_argument("--unit", choices=sorted(UNITS), default="op5v")
+    parser.add_argument("--target", type=float, help="override the unit's catalog target")
     args = parser.parse_args()
+    unit = UNITS[args.unit]
+    target = unit.target if args.target is None else args.target
 
-    mutants = [m for name in TARGETS for m in mutants_of(name, (BACKEND / SUMMARY / name).read_text("utf-8"))]
+    mutants = [m for name in unit.targets for m in mutants_of(name, (BACKEND / unit.folder / name).read_text("utf-8"))]
     print(f"{len(mutants)} mutants, {args.workers} workers", flush=True)
     with tempfile.TemporaryDirectory(prefix="bvg-mut-") as tmp:
         spaces: Queue[Path] = Queue()
         for i in range(args.workers):
             spaces.put(_workspace(Path(tmp) / str(i)))
         baseline = spaces.get()
-        if _pytest(baseline) != 0:
+        if _pytest(baseline, unit) != 0:
             print("baseline tests fail on the unmodified copy: fix those first")
             return 2
         spaces.put(baseline)
 
         def run(mutant: Mutant) -> tuple[Mutant, int]:
             backend = spaces.get()
-            path = backend / SUMMARY / mutant.file
+            path = backend / unit.folder / mutant.file
             original = path.read_text("utf-8")
             try:
                 path.write_text(mutant.source, "utf-8")
-                return mutant, _pytest(backend)
+                return mutant, _pytest(backend, unit)
             finally:
                 path.write_text(original, "utf-8")
                 spaces.put(backend)
@@ -215,7 +238,7 @@ def main() -> int:
 
     survivors = [m for m, code in results if code == 0]
     score = 100 * (len(results) - len(survivors)) / len(results)
-    per_file = {name: [c for m, c in results if m.file == name] for name in TARGETS}
+    per_file = {name: [c for m, c in results if m.file == name] for name in unit.targets}
     for name, codes in per_file.items():
         print(f"{name}: {sum(c != 0 for c in codes)}/{len(codes)} killed")
     for m, code in results:
@@ -223,8 +246,8 @@ def main() -> int:
             print(f"TIMEOUT {m.file}:{m.line} {m.what}")
     for m in survivors:
         print(f"SURVIVED {m.file}:{m.line} {m.what}")
-    print(f"mutation score {score:.1f}% (target {args.target}%)")
-    return 0 if score >= args.target else 1
+    print(f"mutation score {score:.1f}% (target {target}%)")
+    return 0 if score >= target else 1
 
 
 if __name__ == "__main__":

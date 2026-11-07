@@ -87,7 +87,8 @@ Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this tabl
 | Eval tool | `cd eval && uv sync && uv run pytest` (not created yet: SVC7) |
 | Backend: install / test | `cd backend && uv sync --locked` · `uv run pytest` · one test: `uv run pytest -k be0_sec_04` |
 | Backend: lint / format / licences | `uv run ruff check .` · `uv run ruff format --check .` · `uv run python scripts/licence_gate.py` |
-| Backend: mutation run (minutes; on temporary copies) | `uv run python scripts/mutation_run.py` |
+| Backend: mutation run (minutes; on temporary copies) | `uv run python scripts/mutation_run.py --unit op5v` (or `op3`) |
+| Backend: slow tests (nightly in CI) | `uv run pytest -m nightly` (`.github/workflows/nightly.yml` also runs both mutation units) |
 | Backend: run locally | `uv run biovidgen` (env: `BIOVIDGEN_DATA_DIR`, `BIOVIDGEN_PORT` default 8765, `BIOVIDGEN_EXTENSION_IDS` comma-separated). The pairing token is in `<data dir>/token` |
 
 ## Non-negotiable rules

@@ -35,6 +35,8 @@ One row per lookup, `op = OP3.openalex`: run id (the panel's, through `X-BVG-Run
 `uv run python scripts/spike_op3.py <dir outside the repo> [--regional]` repeats the coverage and latency numbers in the plan. It uses the live network and saves raw answers, which may hold abstracts that cannot be redistributed: never commit that directory.
 
 ## Acceptance (2026-11-07)
-- 49 backend tests for OP3; 4 client tests; 2 e2e. Catalog OP3 37/43. Open: HYP-01..03 and VAL-01 are spike rows, measured in the plan; PERF-02 and MUT-01 are nightly jobs that do not exist yet.
+- 62 backend tests for OP3 (one nightly); 4 client tests; 2 e2e. Catalog OP3 39/43. Open: HYP-01..03 and VAL-01 are spike rows, measured in the plan.
+- Mutation (OP3-MUT-01, `uv run python scripts/mutation_run.py --unit op3`, target 80%): first run 80.6% found 18 real gaps (cut points, length limits, lone surrogates, the 3-topic cap); tests added, code unchanged; now **98.1%** (101/103). Both survivors are equivalent: `frozen=True` on the upstream models (nothing mutates them), and encoding `/` in the DOI (OpenAlex accepts `%2F`, checked live).
+- Cold resolve on the recorded latency profile (OP3-PERF-02, nightly): passes; profile in `backend/tests/fixtures/openalex/latency-profile.json` (numbers only).
 - Spike: authors 99.0% / 98.0%, keywords or topics 99.0% / 99.5%, both-host p95 0.78 s / 0.71 s (MEDLINE / Latin American samples).
 - Live smoke through the real transport: 5 DOIs, including one with `<>;()` characters and the 1,011-author paper (1 MB, 1.5 s).

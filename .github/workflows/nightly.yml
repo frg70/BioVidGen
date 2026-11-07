@@ -1,0 +1,40 @@
+# Nightly gates (test-catalog gate "NIGHT"): slow tests and mutation runs. Actions are pinned by commit SHA.
+# Runs on the default branch at 07:00 UTC (01:00 in Mexico City), or by hand from the Actions tab.
+name: nightly
+
+on:
+  schedule:
+    - cron: '0 7 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  slow-tests:
+    name: backend slow tests (OP3-PERF-02)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: pipx install uv==0.9.11
+      - run: uv sync --locked
+      - run: uv run pytest -m nightly
+
+  mutation:
+    name: mutation ${{ matrix.unit }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        unit: [op5v, op3] # OP5V-MUT-01 target 90 %, OP3-MUT-01 target 80 % (scripts/mutation_run.py)
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - run: pipx install uv==0.9.11
+      - run: uv sync --locked
+      - run: uv run python scripts/mutation_run.py --unit ${{ matrix.unit }} --workers 4
