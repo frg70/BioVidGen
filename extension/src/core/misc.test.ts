@@ -30,17 +30,23 @@ describe('core/runid', () => {
 });
 
 describe('core/egress', () => {
-  it('SVC0-SEC-03 allowlist: https to scholarly hosts and the chosen LLM host; http only to local Ollama', () => {
-    expect(STATIC_ALLOWED_HOSTS).toEqual(['api.openalex.org', 'api.crossref.org', 'www.ebi.ac.uk', 'api.unpaywall.org', 'localhost:11434']);
+  it('SVC0-SEC-03 BE1-SEC-02 allowlist: https to scholarly hosts and the chosen LLM host; http only to local Ollama and the local backend', () => {
+    expect(STATIC_ALLOWED_HOSTS).toEqual(['api.openalex.org', 'api.crossref.org', 'www.ebi.ac.uk', 'api.unpaywall.org', 'localhost:11434', '127.0.0.1:8765']);
     expect(isAllowedUrl('https://api.openalex.org/works/doi:10.1/x')).toBe(true);
     expect(isAllowedUrl('https://www.ebi.ac.uk/europepmc/webservices/rest/PMC1/fullTextXML')).toBe(true);
     expect(isAllowedUrl('http://localhost:11434/api/chat')).toBe(true);
+    expect(isAllowedUrl('http://127.0.0.1:8765/health')).toBe(true);
     expect(isAllowedUrl('https://api.groq.com/openai/v1/chat/completions', ['api.groq.com'])).toBe(true);
     for (const bad of [
       'https://api.groq.com/x',
       'http://api.crossref.org/works',
       'https://localhost:11435/',
       'http://localhost/',
+      'https://127.0.0.1:8765/health',
+      'http://127.0.0.1:8766/health',
+      'http://127.0.0.1/health',
+      'http://localhost:8765/health',
+      'http://user@127.0.0.1:8765/health',
       'https://api.openalex.org.evil.example/',
       'https://user@evil.example/',
       'ftp://api.openalex.org/',

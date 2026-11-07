@@ -56,4 +56,4 @@ The 16 survivors, none of which changes behaviour:
 A new survivor outside this table needs a test or a reason added here.
 
 ## Not built yet
-There is no HTTP endpoint for OP5V: that arrives with the extension client (ADR-0010 step 3).
+There is no HTTP endpoint for OP5V: it arrives with the OP5 stub, when something produces drafts (delta D35).

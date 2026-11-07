@@ -54,6 +54,7 @@ export interface RequestOptions {
   retry?: Partial<RetryPolicy> | false;
   signal?: AbortSignal;
   headers?: Record<string, string>;
+  mode?: RequestMode;
 }
 
 export interface Http {
@@ -77,6 +78,7 @@ export function createHttp(deps: HttpDeps): Http {
     try {
       const init: RequestInit = { method, signal: ctrl.signal, credentials: 'omit', referrerPolicy: 'no-referrer' };
       if (opts.headers) init.headers = opts.headers;
+      if (opts.mode) init.mode = opts.mode;
       if (body !== undefined) init.body = body;
       const response = await deps.fetch(url, init);
       if (response.redirected && !isAllowedUrl(response.url, deps.userLlmHosts?.() ?? [])) {

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import type { BrowserContext, Page } from '@playwright/test';
-import { expect, test } from './fixtures';
+import { BACKEND_HEALTH, expect, test } from './fixtures';
 
 const ROOT = fileURLToPath(new URL('../../fixtures/pages/', import.meta.url));
 const LABELS = JSON.parse(readFileSync(`${ROOT}labels.json`, 'utf8')) as Record<string, { url: string; expected: { doi: string | null; pmid: string | null } }>;
@@ -106,7 +106,7 @@ test('OP1-E2E-04 OP1-A11Y-02 journal off the list: DOI typed by keyboard, wrong 
   await expect(panel.locator('dd')).toHaveCount(0);
   await expect(panel.getByRole('textbox')).toHaveValue('');
 
-  const sent = egress.filter((r) => !r.url.startsWith('chrome-extension:') && !r.url.startsWith(HOST) && r.url !== 'about:blank');
+  const sent = egress.filter((r) => !r.url.startsWith('chrome-extension:') && !r.url.startsWith(HOST) && r.url !== 'about:blank' && r.url !== BACKEND_HEALTH);
   expect(sent.map((r) => r.url)).toEqual([]);
   expect(egress.some((r) => r.url.includes('11234') || (r.postData ?? '').includes('11234'))).toBe(false);
 });
@@ -236,7 +236,7 @@ test('OP1-SEC-01 SYS-SEC-01 content bundle has no network API, and detection sen
   await openPaper(context, url);
   await expect(panel.getByText(LABELS.plos?.expected.doi as string, { exact: true })).toBeVisible();
   await panel.waitForTimeout(1000);
-  expect(egress.map((r) => r.url).filter((u) => !u.startsWith('chrome-extension:') && u !== url && u !== 'about:blank')).toEqual([]);
+  expect(egress.map((r) => r.url).filter((u) => !u.startsWith('chrome-extension:') && u !== url && u !== 'about:blank' && u !== BACKEND_HEALTH)).toEqual([]);
 });
 
 test('OP1-OBS-01 OP1-PERF-01 log has duration and source only; 60k nodes + 200 meta: p95 ≤ 100 ms (target 50 ms)', async ({ context, extensionId, sites }) => {

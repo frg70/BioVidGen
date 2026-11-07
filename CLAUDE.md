@@ -24,7 +24,7 @@ Read the relevant source before changing behaviour.
 | How to reason here; why each decision was made | `docs/agent/reasoning.md` |
 | Reusable prompts (unit, spike, review, end of session) | `docs/agent/prompts.md` |
 | Architecture, modules, interfaces, NFRs, phases | `docs/process-design/tech-spec-v3.md`, `system-spec-v3.yaml` |
-| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D34) |
+| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D35) |
 | Every test that must pass | `docs/testing/test-catalog.md` |
 | Entities, operations, metrics, hypotheses | `docs/discovery/discovery-process-map.md`, `docs/discovery/spec.yaml` |
 | Decisions | `docs/adr/` (0001 and 0002 superseded, 0005 withdrawn, 0010 amends 0006; 0011 page access for OP1) |
@@ -43,6 +43,7 @@ When documents conflict, this is the precedence order. Report the conflict; do n
 extension/              WXT + TypeScript + Preact, Chrome MV3
   src/core/             SVC0  db, http (retry/limiter), log, runId, flags, messaging, i18n
   src/contracts/        Zod schemas (single source; JSON Schema exported for eval/)
+  src/backend/          BE1   client for the local backend: pairing, state (ADR-0010 step 3)
   src/detect/           SVC1  OP1, badges, sites.json
   src/scholarly/        SVC2  OP3, OP12, clients/, preprint-patterns.json
   src/text/             SVC3  OP4, headings.json
@@ -92,14 +93,14 @@ Run from `extension/` (created by the SVC0 scaffold, 2026-11-05). Keep this tabl
 
 Each rule is guarded by stop-ship tests in the catalog.
 
-1. **Privacy.** Network calls go only to the allowlist: OpenAlex, Crossref, Europe PMC, Unpaywall (if enabled), the user's chosen LLM host, and `localhost:11434`.
+1. **Privacy.** Network calls go only to the allowlist: OpenAlex, Crossref, Europe PMC, Unpaywall (if enabled), the user's chosen LLM host, `localhost:11434`, and the local backend at `127.0.0.1:8765`.
    - Scholarly APIs receive identifiers only (DOI, PMID, PMCID).
    - The LLM receives one section of text per call.
    - No telemetry, analytics or remote logging. (SYS-SEC-01…06)
-   - The backend binds to `127.0.0.1` only and follows the same allowlist. Every request passes the Host check, the Origin allowlist and the pairing token (BE0-SEC-01…04). The extension's call to the backend joins the allowlist with the extension-client step (ADR-0010 step 3).
+   - The backend binds to `127.0.0.1` only and follows the same allowlist. Every request passes the Host check, the Origin allowlist and the pairing token (BE0-SEC-01…04). The extension reaches it only at `127.0.0.1:8765` (BE1-SEC-02), and so far sends nothing about the page (BE1-SEC-03).
 2. **Secrets.** API keys live only in `chrome.storage.local`. They never appear in `storage.sync`, logs, exports, diagnostics, prompts, fixtures or commits. (SYS-SEC-10…15)
-   - The backend pairing token (`<data dir>/token`) is a secret under the same rules.
-   - ADR-0010 moves API keys to the backend (OS keychain via keyring). Update this rule in that step.
+   - The backend pairing token (`<data dir>/token`) is a secret under the same rules. The extension keeps it in `chrome.storage.local` (BE1-SEC-01).
+   - ADR-0010 moves API keys to the backend (OS keychain via keyring). That arrives with OP5 (delta D35). Update this rule then.
 3. **Rendering.** Strings from pages, APIs or models are rendered with `textContent`, never with `innerHTML`. (SYS-SEC-20)
 4. **One writer per store.** Only the owning module writes its store.
    - `Summary` is written only by `summary/validate.ts` (OP5V), and in the backend only by `summary/validate.py`.

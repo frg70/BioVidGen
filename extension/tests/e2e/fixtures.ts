@@ -1,13 +1,38 @@
 import { fileURLToPath } from 'node:url';
-import { test as base, chromium, type BrowserContext, type Worker } from '@playwright/test';
+import { test as base, chromium, type BrowserContext, type Route, type Worker } from '@playwright/test';
+import { BACKEND_HOST } from '../../src/core/egress';
 import type { ObservedRequest } from '../support/egress-policy';
 
 /** Built by `wxt build` (npm run test:e2e builds first). */
 const EXTENSION_DIR = fileURLToPath(new URL('../../.output/chrome-mv3', import.meta.url));
 export const FIXTURE_HOST = 'fixtures.biovidgen.test';
+/** What the panel asks the local backend when it opens: a fixed address with nothing about the page (BE1-SEC-03). */
+export const BACKEND_HEALTH = `http://${BACKEND_HOST}/health`;
 
 export interface Captured extends ObservedRequest {
   fromServiceWorker: boolean;
+}
+
+/** The local backend, as the extension sees it. Off by default, as on a machine that never started it. */
+export interface BackendStub {
+  state: 'off' | 'on' | 'origin-refused';
+  token: string;
+}
+
+/**
+ * Stands in for backend/, refusing an Origin the way its guard does (BE0-SEC-03). Playwright answers CORS itself on
+ * routed requests, so the browser's CORS failure is modelled by aborting. Real CORS against the real backend is
+ * checked by hand (docs/runbooks/be1.md).
+ */
+async function answerAsBackend(route: Route, backend: BackendStub): Promise<void> {
+  const request = route.request();
+  if (backend.state === 'off') return route.abort('connectionrefused');
+  const headers = await request.allHeaders();
+  if (backend.state === 'origin-refused' && headers.origin !== undefined) return route.abort('failed');
+  const path = new URL(request.url()).pathname;
+  if (path === '/health') return route.fulfill({ status: 200, json: { ok: true, version: '0.1.0' } });
+  const accepted = headers['x-bvg-token'] === backend.token;
+  return accepted ? route.fulfill({ status: 200, json: { paired: true } }) : route.fulfill({ status: 401, json: { error: 'UNAUTHORIZED' } });
 }
 
 /**
@@ -24,6 +49,7 @@ export const test = base.extend<{
   pages: Map<string, string>;
   /** Recorded pages served on real publisher hostnames, keyed by full URL. Never reaches the network. */
   sites: Map<string, string>;
+  backend: BackendStub;
 }>({
   // Playwright requires an object pattern as the first fixture argument.
   // eslint-disable-next-line no-empty-pattern
@@ -38,7 +64,11 @@ export const test = base.extend<{
   egress: async ({}, use) => {
     await use([]);
   },
-  context: async ({ egress, pages, sites }, use) => {
+  // eslint-disable-next-line no-empty-pattern
+  backend: async ({}, use) => {
+    await use({ state: 'off', token: '' });
+  },
+  context: async ({ egress, pages, sites, backend }, use) => {
     const context = await chromium.launchPersistentContext('', {
       channel: 'chromium',
       args: [`--disable-extensions-except=${EXTENSION_DIR}`, `--load-extension=${EXTENSION_DIR}`, '--lang=es'],
@@ -52,6 +82,7 @@ export const test = base.extend<{
       if (url.protocol === 'chrome-extension:') return route.continue();
       const recorded = sites.get(url.href);
       if (recorded !== undefined) return route.fulfill({ status: 200, contentType: 'text/html; charset=utf-8', body: recorded });
+      if (url.host === BACKEND_HOST) return answerAsBackend(route, backend);
       if (url.host === FIXTURE_HOST) {
         const html = pages.get(url.pathname);
         return html === undefined ? route.fulfill({ status: 404, body: '' }) : route.fulfill({ status: 200, contentType: 'text/html', body: html });

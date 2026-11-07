@@ -19,5 +19,15 @@
   "panelManualInvalid": { "message": "That doesn't look like a DOI. Example: 10.1234/abcd" },
   "panelManualTitle": { "message": "Article you entered" },
   "panelManualNote": { "message": "Entered by you; not checked yet." },
-  "panelManualChange": { "message": "Change DOI" }
+  "panelManualChange": { "message": "Change DOI" },
+  "backendChecking": { "message": "Looking for BioVidGen on this computer…" },
+  "backendPaired": { "message": "Connected to BioVidGen on this computer." },
+  "backendOff": { "message": "BioVidGen is not running on this computer. Start it with: uv run biovidgen" },
+  "backendWrongOrigin": { "message": "BioVidGen is running but does not recognise this extension. Restart it with the variable BIOVIDGEN_EXTENSION_IDS=$ID$", "placeholders": { "ID": { "content": "$1" }} },
+  "backendRetry": { "message": "Try again" },
+  "backendPairHelp": { "message": "To link this extension, copy the contents of the token file in the BioVidGen data folder. On Windows: %LOCALAPPDATA%\\BioVidGen\\token" },
+  "backendPairLabel": { "message": "Link code" },
+  "backendPairSubmit": { "message": "Link" },
+  "backendBadToken": { "message": "That doesn't look like a link code: it has 64 letters and numbers. Copy the whole file." },
+  "backendRejected": { "message": "BioVidGen did not accept it. Copy the code from the token file again." }
 }

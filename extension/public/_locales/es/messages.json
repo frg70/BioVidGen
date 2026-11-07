@@ -19,5 +19,15 @@
   "panelManualInvalid": { "message": "Eso no parece un DOI. Ejemplo: 10.1234/abcd" },
   "panelManualTitle": { "message": "Artículo indicado por ti" },
   "panelManualNote": { "message": "Escrito por ti; todavía no se ha comprobado." },
-  "panelManualChange": { "message": "Cambiar DOI" }
+  "panelManualChange": { "message": "Cambiar DOI" },
+  "backendChecking": { "message": "Buscando BioVidGen en esta computadora…" },
+  "backendPaired": { "message": "Conectado a BioVidGen en esta computadora." },
+  "backendOff": { "message": "BioVidGen no está en marcha en esta computadora. Inícialo con: uv run biovidgen" },
+  "backendWrongOrigin": { "message": "BioVidGen está en marcha, pero no reconoce esta extensión. Reinícialo con la variable BIOVIDGEN_EXTENSION_IDS=$ID$", "placeholders": { "ID": { "content": "$1" }} },
+  "backendRetry": { "message": "Reintentar" },
+  "backendPairHelp": { "message": "Para enlazar esta extensión, copia el contenido del archivo token de la carpeta de datos de BioVidGen. En Windows: %LOCALAPPDATA%\\BioVidGen\\token" },
+  "backendPairLabel": { "message": "Código de enlace" },
+  "backendPairSubmit": { "message": "Enlazar" },
+  "backendBadToken": { "message": "Eso no parece un código de enlace: son 64 letras y números. Copia el archivo completo." },
+  "backendRejected": { "message": "BioVidGen no lo aceptó. Vuelve a copiar el código del archivo token." }
 }
