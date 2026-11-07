@@ -9,6 +9,9 @@ When the panel has a DOI (detected, picked or typed) and the backend is paired, 
 - **Only the DOI leaves the machine,** plus the fixed field list. No key, no email, no page URL.
 - **Cache:** table `articles` in `biovidgen.sqlite3`. Fresh for 30 days. After that the next request asks OpenAlex again; if OpenAlex fails, the old copy is answered with `stale: true`. Rows not refreshed for 90 days are deleted when the backend starts.
 
+## When the details are about another record
+OpenAlex answers some DOIs with a different record, most often a bioRxiv preprint with its published journal article (12 of 34 in the S3 spike). The Article then carries `matchedDoi`, and the panel says "OpenAlex identifica este DOI con otro registro, {doi}" above the details. OpenAlex's `type` is never shown when it is `preprint`: it was wrong on all 50 Genome Research and Genes & Development articles sampled. Preprint status is OP12's job.
+
 ## Answers
 | Backend answer | Cause | Panel shows |
 |---|---|---|

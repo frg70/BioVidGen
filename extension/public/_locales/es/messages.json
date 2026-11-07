@@ -46,7 +46,7 @@
   "articleSource": { "message":"Datos de OpenAlex." },
   "articleType_article": { "message":"Artículo" },
   "articleType_review": { "message":"Revisión" },
-  "articleType_preprint": { "message":"Preprint" },
   "articleType_letter": { "message":"Carta" },
-  "articleType_editorial": { "message":"Editorial" }
+  "articleType_editorial": { "message":"Editorial" },
+  "articleMatched": {"message":"OpenAlex identifica este DOI con otro registro, $DOI$ (a menudo la versión publicada de un preprint). Los datos de abajo son de ese registro.","placeholders":{"DOI":{"content":"$1"}}}
 }

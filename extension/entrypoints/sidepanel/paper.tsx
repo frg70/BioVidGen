@@ -30,7 +30,6 @@ const AUTHORS_SHOWN = 10;
 const TYPES: Record<string, MessageKey> = {
   article: 'articleType_article',
   review: 'articleType_review',
-  preprint: 'articleType_preprint',
   letter: 'articleType_letter',
   editorial: 'articleType_editorial',
 };
@@ -59,9 +58,12 @@ function ArticleMeta({ doi, lookup, showTitle }: { doi: string; lookup: Lookup; 
   else if (!result.ok) body = <p>{t(result.code === 'NOT_FOUND' ? 'articleNotFound' : 'articleUnavailable')}</p>;
   else {
     const { article: a, stale } = result.value;
-    const type = a.type ? (TYPES[a.type] ? t(TYPES[a.type] as MessageKey) : a.type) : null;
+    // OpenAlex's "preprint" type is wrong too often to show (all 50 Genome Research / Genes & Dev articles sampled in
+    // S3): preprint status comes from OP12, from Crossref and the DOI pattern.
+    const type = a.type && a.type !== 'preprint' ? (TYPES[a.type] ? t(TYPES[a.type] as MessageKey) : a.type) : null;
     body = (
       <>
+        {a.matchedDoi ? <p>{t('articleMatched', a.matchedDoi)}</p> : null}
         <dl>
           {showTitle && a.title ? <Field label={t('articleTitle')} value={a.title} /> : null}
           <Field label={t('articleAuthors')} value={a.authors.length > 0 ? authorsLine(a.authors) : t('articleNoAuthors')} />

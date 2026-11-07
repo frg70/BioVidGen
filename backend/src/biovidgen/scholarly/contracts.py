@@ -7,7 +7,7 @@ from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
-ARTICLE_SCHEMA_VERSION = 1
+ARTICLE_SCHEMA_VERSION = 2  # 2: matchedDoi (D37). Stored v1 rows read as misses and are fetched again.
 
 Short = Annotated[str, Field(min_length=1, max_length=500)]
 Long = Annotated[str, Field(min_length=1, max_length=2000)]
@@ -40,6 +40,9 @@ class Coverage(_Strict):
 
 class Article(_Strict):
     doi: Annotated[str, Field(max_length=256)]
+    # The DOI OpenAlex answered with, when it is not `doi`. OpenAlex answers about a third of bioRxiv DOIs with
+    # the published article (S3 spike), so every field below then describes that work, not the one asked for.
+    matchedDoi: Annotated[str, Field(max_length=256)] | None
     openalexId: Annotated[str, Field(pattern=r"^W\d{1,12}$")] | None
     pmid: Annotated[str, Field(pattern=r"^\d{1,9}$")] | None
     pmcid: Annotated[str, Field(pattern=r"^PMC\d{1,9}$")] | None
@@ -55,7 +58,7 @@ class Article(_Strict):
     isOA: bool | None
     coverage: Coverage
     fetchedAt: str
-    schemaVersion: Literal[1]
+    schemaVersion: Literal[2]
 
 
 class Resolved(_Strict):

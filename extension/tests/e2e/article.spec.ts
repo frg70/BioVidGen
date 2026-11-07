@@ -66,6 +66,29 @@ test('OP3-E2E-01 OP3-SEC-01 a detected paper gets its OpenAlex header; the backe
   expect(egress.filter((r) => new URL(r.url).host === BACKEND_HOST).every((r) => !r.postData)).toBe(true);
 });
 
+test('OP3-UNIT-06 a preprint OpenAlex answers with its journal article: the panel says whose details these are, and shows no type', async ({
+  context,
+  extensionId,
+  serviceWorker,
+  pages,
+  backend,
+}) => {
+  const [article] = syntheticArticles(1);
+  if (!article) throw new Error('no fixture');
+  pages.set(article.path, article.html);
+  backend.state = 'on';
+  backend.token = TOKEN;
+  backend.articles.set('10.1101/2024.01.22.576596', answerFor('10.1101/2024.01.22.576596', { matchedDoi: '10.1007/s12035-026-06127-w', type: 'preprint' }));
+  await paired(serviceWorker);
+  const panel = await openPanel(context, extensionId);
+  await openPaper(context, `https://${FIXTURE_HOST}${article.path}`);
+  const field = panel.getByLabel('¿Conoces el DOI? Escríbelo o pégalo aquí');
+  await field.fill('10.1101/2024.01.22.576596');
+  await field.press('Enter');
+  await expect(panel.getByText(/OpenAlex identifica este DOI con otro registro, 10\.1007\/s12035-026-06127-w/)).toBeVisible();
+  await expect(panel.locator('dt:text-is("Tipo")')).toHaveCount(0);
+});
+
 test('OP3-SEC-02 OP3-UNIT-12 a typed DOI: hostile OpenAlex text stays text, and an unknown DOI is explained', async ({ context, extensionId, serviceWorker, pages, backend }) => {
   const [article] = syntheticArticles(1);
   if (!article) throw new Error('no fixture');

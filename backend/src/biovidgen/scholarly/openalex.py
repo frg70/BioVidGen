@@ -164,8 +164,10 @@ def to_article(work: OpenAlexWork, doi: str, fetched_at: str, current_year: int)
     topic_name = _text(topic.display_name, 500) if topic else None
     abstract = _text(reconstruct(work.abstract_inverted_index), 50_000)
     pmcid = _tail(ids.pmcid, r"(?:^|/)(?:PMC)?(\d{1,9})/?$")
+    answered = _tail((work.doi or "").lower(), r"^(?:https?://(?:dx\.)?doi\.org/)?(10\.\S{1,240})$")
     return Article(
         doi=doi,
+        matchedDoi=answered if answered is not None and answered != doi else None,
         openalexId=_tail(work.id, r"(?:^|/)(W\d{1,12})$"),
         pmid=_tail(ids.pmid, r"(?:^|/)(\d{1,9})/?$"),
         pmcid=f"PMC{pmcid}" if pmcid else None,

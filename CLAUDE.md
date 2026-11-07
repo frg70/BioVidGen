@@ -24,7 +24,7 @@ Read the relevant source before changing behaviour.
 | How to reason here; why each decision was made | `docs/agent/reasoning.md` |
 | Reusable prompts (unit, spike, review, end of session) | `docs/agent/prompts.md` |
 | Architecture, modules, interfaces, NFRs, phases | `docs/process-design/tech-spec-v3.md`, `system-spec-v3.yaml` |
-| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D36) |
+| How each unit is built (test-first plans) | `docs/impl-plans/` (its README holds spec deltas D1–D37) |
 | Every test that must pass | `docs/testing/test-catalog.md` |
 | Entities, operations, metrics, hypotheses | `docs/discovery/discovery-process-map.md`, `docs/discovery/spec.yaml` |
 | Decisions | `docs/adr/` (0001 and 0002 superseded, 0005 withdrawn, 0010 amends 0006; 0011 page access for OP1) |

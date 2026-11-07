@@ -1,6 +1,7 @@
 {
  "article": {
   "doi": "10.1371/journal.pone.0185809",
+  "matchedDoi": null,
   "openalexId": "W2766208183",
   "pmid": "29045418",
   "pmcid": "PMC5646769",
@@ -142,7 +143,7 @@
    "keywords": "found"
   },
   "fetchedAt": "2026-11-07T00:00:00.000Z",
-  "schemaVersion": 1
+  "schemaVersion": 2
  },
  "stale": false,
  "saved": true

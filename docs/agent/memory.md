@@ -105,6 +105,8 @@ Format: fact (date, source).
 - PubMed result lists expose PMIDs, not DOIs. (design finding)
 - OpenAlex `ids.pmcid` comes as `https://www.ncbi.nlm.nih.gov/pmc/articles/<digits>`, without the PMC prefix. (2026-11-07, API)
 - Crossref returned no `subject` on 404 sampled works. (2026-11-07, spike)
+- OpenAlex answers a third of bioRxiv DOIs with the published article (12/34: the returned `doi` differs), and types every sampled Genome Research / Genes & Development article (`10.1101/gr.*`) as `preprint`. Never use OpenAlex `type` for preprint status. (2026-11-07, S3)
+- Crossref `/works/{doi}` `updated-by` lists retraction, EoC and correction notices with `source` (`publisher` or `retraction-watch`) and date; `filter=updates:` misses notices that come only from Retraction Watch (13/20 agree). `relation.is-preprint-of` was empty on 34 of 34 bioRxiv preprints. Some DOIs (e.g. `10.26355`, Eur Rev Med Pharmacol Sci) are 404 in Crossref while OpenAlex flags them retracted. (2026-11-07, S3)
 - When the backend refuses an Origin, a CORS fetch fails exactly like a closed port. A `no-cors` GET sends no Origin, so a running backend answers it with an opaque response (status 0). (2026-11-06, Chrome 156 and Chromium 156 against the real backend)
 - Chromium on Linux ignores `--lang` and takes its UI language from `LANGUAGE`; Windows honours `--lang`. (2026-11-06, CI)
 - Zod 4 `.max()` on strings counts code points, not UTF-16 units: 1001 emoji pass `max(2000)` and also `max(1001)`. (2026-11-05, run against zod 4.6.7)
@@ -192,6 +194,7 @@ Append as you find them, one line each, with the date.
 - 2026-11-06: Green on Windows is not green on Linux: CI's first run failed 7 e2e tests that always passed here.
 - 2026-11-07: urllib's `timeout` limits each socket read, not the request: one spike call took 752 s with `timeout=15`. The backend checks a deadline between `read1` calls.
 - 2026-11-07: PowerShell: `R` is an alias of Invoke-History, so a helper function named `R` silently does nothing. Use the edit tool.
+- 2026-11-07: SQLite WAL with the default `synchronous = FULL` fsyncs every commit: up to 82 ms per log row on a busy Windows disk. `NORMAL` (now set) takes it to ~13 ms.
 - 2026-11-07: Timing tests fail while a mutation run holds the cores (OP3-RES-02 took >1.5 s): bounds now leave room; do not run timing tests next to a mutation run.
 - 2026-11-07: e2e OP1-UNIT-10 failed once in a full run and passed alone and on the rerun (load).
 - 2026-11-05: Starlette TestClient warns that httpx is deprecated in favour of `httpx2`; harmless for now (dev only).

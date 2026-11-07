@@ -97,7 +97,7 @@ def test_op3_unit_01_field_mapping_from_openalex() -> None:
     assert a.primaryTopic.field == "Agricultural and Biological Sciences"
     assert a.oaUrl == PLOS["best_oa_location"]["pdf_url"]
     assert a.coverage.authors == "found" and a.coverage.keywords == "found"
-    assert (a.doi, a.schemaVersion) == (PLOS_DOI, 1)
+    assert (a.doi, a.schemaVersion) == (PLOS_DOI, 2)
 
 
 def test_op3_unit_02_abstract_reconstruction() -> None:
@@ -139,6 +139,16 @@ def test_op3_unit_06_merged_work_keeps_canonical_id() -> None:
     """OP3-UNIT-06 a merged work answers with its canonical id; that id is stored, not the one asked for."""
     a = article_of({**PLOS, "id": "https://openalex.org/W1234567"})
     assert a.openalexId == "W1234567"
+
+
+def test_op3_unit_06_answer_for_another_doi_is_named() -> None:
+    """OP3-UNIT-06 (D37) OpenAlex answers some preprint DOIs with the published work (12 of 34 in the S3 spike):
+    the DOI it answered with is kept, so the panel never passes that record off as the preprint's own."""
+    preprint = "10.1101/2024.01.22.576596"
+    merged = article_of({**PLOS, "doi": "https://doi.org/10.1007/S12035-026-06127-W"}, preprint)
+    assert (merged.doi, merged.matchedDoi) == (preprint, "10.1007/s12035-026-06127-w")
+    assert article_of({**PLOS, "doi": "https://doi.org/10.1371/JOURNAL.PONE.0185809"}).matchedDoi is None
+    assert article_of({**PLOS, "doi": None}).matchedDoi is None
 
 
 def test_op3_unit_07_more_than_100_authors() -> None:
@@ -412,7 +422,7 @@ def test_op3_type_01_article_schema_semantics() -> None:
     with pytest.raises(ValidationError):
         Article.model_validate({**body, "extra": 1})
     with pytest.raises(ValidationError):
-        Article.model_validate({**body, "schemaVersion": 2})
+        Article.model_validate({**body, "schemaVersion": 1})
     with pytest.raises(ValidationError):
         Article.model_validate({**body, "oaUrl": "javascript:alert(1)"})
 
@@ -669,7 +679,14 @@ def test_op3_mig_01_old_rows_never_crash(tmp_path: Path) -> None:
     with connect(db) as c:
         c.execute(
             "INSERT INTO articles (doi, fetched_at, body) VALUES (?, ?, ?)",
-            (PLOS_DOI, "2026-11-06T00:00:00.000Z", '{"schemaVersion": 0}'),
+            # A complete v1 record (before matchedDoi, D37) must read as a miss, not crash or pass as v2.
+            (
+                PLOS_DOI,
+                "2026-11-06T00:00:00.000Z",
+                json.dumps(
+                    {k: v for k, v in article_of(PLOS).model_dump().items() if k != "matchedDoi"} | {"schemaVersion": 1}
+                ),
+            ),
         )
         c.execute(
             "INSERT INTO articles (doi, fetched_at, body) VALUES (?, ?, ?)", (SPM_DOI, "2026-11-06T00:00:00.000Z", "{")
