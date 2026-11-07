@@ -1,0 +1,164 @@
+# BioVidGen system spec v3 — extends docs/discovery/spec.yaml (entity and operation names as in the map).
+system:
+  name: BioVidGen
+  source_process_spec: "docs/discovery/spec.yaml (2026-11-05)"
+  architecture_style: modular_monolith
+  goals:
+    - "Identify paper; show authors, keywords, preprint/retraction/EoC status with sources and date"
+    - "Spanish structured summary, every shown claim with verified verbatim quote (100%), agreement >=80%"
+    - "Badges/filters on PubMed and Europe PMC result lists"
+    - "Export to appraisal sheet"
+    - "Pilot: minutes/article -30%, accuracy non-inferior, install >=40%, week-4 active >=40%"
+  non_goals: ["hosted backend", "accounts", "telemetry", "Firefox/Edge/mobile", "OCR", "Mapa (OP7)", "participant/EUBE data", "in-product time tracking", "quality verdicts", "model training"]
+  constraints: ["MIT + permissive deps only (ADR-0004)", "$0 recurring (ADR-0006)", "free LLM tiers volatile (ADR-0007)", "2 developers", "expert hours [specify]", "student hardware [specify]"]
+
+services:
+  - {id: SVC0, name: core, kind: module, split_reason: "", owned_entities: [], operations: [], method_classes: [], identity: "all contexts", scaling: "n/a (per user)"}
+  - {id: SVC1, name: detect, kind: module, split_reason: "runs in content-script context (DOM access) — browser boundary, same deployable", owned_entities: [PageContext], operations: [OP1], method_classes: [DETERMINISTIC], identity: content_script, scaling: "per tab"}
+  - {id: SVC2, name: scholarly, kind: module, split_reason: "", owned_entities: [Article, StatusCheck], operations: [OP3, OP12], method_classes: [DETERMINISTIC], identity: side_panel, scaling: "per-host limiter"}
+  - {id: SVC3, name: text, kind: module, split_reason: "", owned_entities: [ArticleText], operations: [OP4], method_classes: [DETERMINISTIC], identity: "content_script (DOM) + side_panel", scaling: "per request"}
+  - {id: SVC4, name: summary, kind: module, split_reason: "", owned_entities: [Summary], operations: [OP5, OP5V], method_classes: [LLM, DETERMINISTIC], identity: "side_panel provider_adapter", scaling: "4 calls/paper; provider quota"}
+  - {id: SVC5, name: workspace, kind: module, split_reason: "", owned_entities: [Feedback], operations: [OP13, OP14], method_classes: [DETERMINISTIC], identity: side_panel, scaling: "n/a"}
+  - {id: SVC6, name: settings, kind: module, split_reason: "", owned_entities: [Settings], operations: [], method_classes: [], identity: options_page, scaling: "n/a"}
+  - {id: SVC7, name: eval, kind: service, split_reason: "different runtime (Python), dev-time only, never shipped to users", owned_entities: [GoldItem], operations: [OP11], method_classes: [HUMAN, DETERMINISTIC], identity: "annotator git identity; CI", scaling: "n/a"}
+
+data:
+  - {entity: PageContext, owner_service: SVC1, storage: "memory per tab", schema: [{field: tabId, type: int, constraints: key}, {field: url, type: string, constraints: ""}, {field: kind, type: "enum{article,result_list,other}", constraints: "article => doi|pmid|title"}, {field: doi, type: string, constraints: "normalised"}, {field: resultIds, type: "string[]", constraints: "<=200"}], access_pattern_requirements: ["get by tabId", "replace on navigation"], consistency: strong, consistency_reason: "single writer", retention: "tab close", migration: "n/a"}
+  - {entity: Article, owner_service: SVC2, storage: "IndexedDB store articles", schema: [{field: doi_norm, type: string, constraints: "PK"}, {field: authors, type: "list", constraints: ""}, {field: keywords, type: "list{term,source}", constraints: "source required"}, {field: type, type: string, constraints: ""}, {field: fetchedAt, type: timestamp, constraints: ""}], access_pattern_requirements: ["get by DOI", "bulk get <=100 DOIs"], consistency: eventual, consistency_reason: "upstream refresh every 30 d", retention: "30 d cache; clear all", migration: "drop-and-refetch allowed"}
+  - {entity: StatusCheck, owner_service: SVC2, storage: "IndexedDB store status_checks", schema: [{field: "[doi_norm, checkedAt]", type: compound, constraints: PK}, {field: retractionNature, type: "enum{none_found,retraction,expression_of_concern,correction,reinstatement}", constraints: "no not_retracted value"}, {field: isPreprint, type: bool, constraints: ""}, {field: sources, type: "list{name,retrievedAt}", constraints: ">=1"}], access_pattern_requirements: ["latest by DOI", "bulk latest <=100 DOIs"], consistency: eventual, consistency_reason: "source lag; 24 h TTL + recheck on display", retention: "last 5 per DOI", migration: "drop-and-refetch allowed"}
+  - {entity: ArticleText, owner_service: SVC3, storage: "memory; IndexedDB texts if pinned", schema: [{field: "[doi_norm, contentHash]", type: compound, constraints: PK}, {field: source, type: enum, constraints: ""}, {field: sections, type: "map", constraints: "min chars per required section for usable"}], access_pattern_requirements: ["get by DOI"], consistency: strong, consistency_reason: local, retention: "session unless pinned (copyright)", migration: "drop allowed"}
+  - {entity: Summary, owner_service: SVC4, storage: "IndexedDB store summaries", schema: [{field: "[doi_norm, pipelineVersion]", type: compound, constraints: PK}, {field: sections, type: "map{summaryEs, evidence[], status}", constraints: "verified => quotes substring of section; numbers in quotes"}, {field: prerequisiteTopics, type: "string[]", constraints: "label background_knowledge"}], access_pattern_requirements: ["latest by DOI", "recent 50"], consistency: strong, consistency_reason: "single writer OP5V", retention: "until cleared", migration: "must migrate (user value)"}
+  - {entity: Feedback, owner_service: SVC5, storage: "IndexedDB store feedback", schema: [{field: id, type: auto, constraints: PK}, {field: summaryKey, type: string, constraints: FK}, {field: kind, type: "enum{wrong,unclear,good}", constraints: ""}], access_pattern_requirements: ["by summaryKey", "export all"], consistency: strong, consistency_reason: local, retention: "until cleared (warn)", migration: "must migrate"}
+  - {entity: Settings, owner_service: SVC6, storage: "chrome.storage.local", schema: [{field: apiKeys, type: "map", constraints: "never sync/log/export"}, {field: provider, type: enum, constraints: ""}], access_pattern_requirements: ["read at run start"], consistency: strong, consistency_reason: local, retention: user, migration: "additive"}
+  - {entity: GoldItem, owner_service: SVC7, storage: "files eval/gold/{doi}/", schema: [{field: "doi+annotator+version", type: compound, constraints: PK}, {field: body, type: "Summary schema", constraints: "JSON Schema from Zod"}], access_pattern_requirements: ["iterate all", "diff annotators"], consistency: strong, consistency_reason: git, retention: "git; non-CC-BY private [specify]", migration: "versioned"}
+
+interfaces:
+  apis:
+    - {id: detect.getPageContext, service: SVC1, input: tabId, output: PageContext, idempotency_key: "tabId+url", auth_role: side_panel, errors: [NO_ARTICLE]}
+    - {id: detect.renderBadges, service: SVC1, input: "[{id,status}], filterMode", output: void, idempotency_key: "ids hash", auth_role: side_panel, errors: [PAGE_CHANGED]}
+    - {id: text.extractDom, service: SVC3, input: tabId, output: "{text, headings[]}", idempotency_key: "url+DOM hash", auth_role: side_panel, errors: [NO_TEXT]}
+    - {id: scholarly.resolve, service: SVC2, input: doi, output: Article, idempotency_key: doi_norm, auth_role: orchestrator, errors: [NOT_FOUND, UPSTREAM_DOWN]}
+    - {id: scholarly.checkStatus, service: SVC2, input: "doi[] <=100", output: "StatusCheck[]", idempotency_key: "sorted DOIs + day", auth_role: orchestrator, errors: [UPSTREAM_DOWN, BUDGET_EXCEEDED]}
+    - {id: text.acquire, service: SVC3, input: "doi, tabId", output: ArticleText, idempotency_key: "doi+hash", auth_role: orchestrator, errors: [NO_TEXT]}
+    - {id: summary.summarize, service: SVC4, input: "doi, providerId", output: Summary, idempotency_key: "doi+pipelineVersion", auth_role: "orchestrator (user action)", errors: [PROVIDER_UNAVAILABLE, QUOTA, TIMEOUT, SCHEMA_INVALID]}
+    - {id: summary.validateAndStore, service: SVC4, input: "draft, ArticleText", output: Summary, idempotency_key: "doi+pipelineVersion", auth_role: "summary.summarize only", errors: [ALL_SECTIONS_FAILED]}
+    - {id: workspace.export, service: SVC5, input: "summaryKey, templateId", output: markdown, idempotency_key: "summaryKey+templateId", auth_role: VW1, errors: [NO_STATUS]}
+    - {id: workspace.mark, service: SVC5, input: "summaryKey, section, kind, note", output: Feedback, idempotency_key: "summaryKey+section+kind", auth_role: VW1, errors: []}
+  events:
+    - {name: PaperDetected, producer: SVC1, consumers: [orchestrator], schema: "{runId, tabId, doi?, pmid?, kind}", ordering_key: tabId, delivery: at_most_once}
+    - {name: ArticleResolved, producer: SVC2, consumers: [SVC3, VW1], schema: "{runId, doi}", ordering_key: doi, delivery: at_most_once}
+    - {name: StatusChecked, producer: SVC2, consumers: [SVC1, VW1], schema: "{runId, doi, retractionNature, isPreprint}", ordering_key: doi, delivery: at_most_once}
+    - {name: TextAcquired, producer: SVC3, consumers: [SVC4, VW1], schema: "{runId, doi, source, usable}", ordering_key: doi, delivery: at_most_once}
+    - {name: SectionValidated, producer: SVC4, consumers: [VW1], schema: "{runId, doi, section, status}", ordering_key: "doi+section", delivery: at_most_once}
+    - {name: SummaryStored, producer: SVC4, consumers: [VW1, SVC5], schema: "{runId, summaryKey}", ordering_key: doi, delivery: at_most_once}
+  contract_versioning: "Zod schemas in extension/src/contracts; schemaVersion on records; additive-only within major; JSON Schema exported for eval; pipelineVersion = hash(prompt, modelId, SectionDraft major, config versions)"
+
+views:
+  - {id: VW1, type: screen, audience_roles: [student], purpose: "understand, verify, export", data: [Article.title, Article.authors, Article.keywords, StatusCheck.retractionNature, StatusCheck.isPreprint, StatusCheck.sources, StatusCheck.checkedAt, "Summary.*"], actions: [{label: Resumir, operation: OP5}, {label: Marcar, operation: OP14}, {label: Exportar, operation: OP13}, {label: "Revisar estado", operation: OP12}], freshness: "status <=24 h, recheck on open", access_constraints: "local user"}
+  - {id: VW2, type: screen, audience_roles: [student], purpose: "badges and filters on result lists", data: ["StatusCheck.*"], actions: [{label: "Ocultar preprints/retractados", operation: OP12}], freshness: "<=24 h", access_constraints: "optional host permissions per site"}
+  - {id: VW3, type: screen, audience_roles: [student], purpose: "provider setup, privacy table, clear data", data: ["Settings.*"], actions: [], freshness: live, access_constraints: "local user"}
+  - {id: VW4, type: screen, audience_roles: [student], purpose: "export preview", data: ["Summary.*", "StatusCheck.*"], actions: [{label: Copiar, operation: OP13}], freshness: live, access_constraints: "local user"}
+  - {id: VW5, type: screen, audience_roles: [student, dev], purpose: "local diagnostics", data: ["debug log (no article text)"], actions: [], freshness: live, access_constraints: "local; export opt-in"}
+  - {id: VW6, type: work_queue, audience_roles: [QFB, physician], purpose: "OP11 concierge + double annotation + adjudication", data: ["GoldItem.*"], actions: [{label: Anotar, operation: OP11}, {label: Adjudicar, operation: OP11}], freshness: "per batch", access_constraints: "annotators; repo access"}
+  - {id: VW7, type: report, audience_roles: [dev, QFB_lead], purpose: "gate decisions", data: ["eval metrics"], actions: [], freshness: "per CI run", access_constraints: repo}
+
+method_infrastructure:
+  deterministic: "rules in TS with versioned config files (sites.json, preprint-prefixes.json, headings.json, normaliser, templates); config version enters pipelineVersion; fixture tests per file"
+  nlp: "n/a"
+  ml: {pipeline: "n/a", retrain_trigger: "n/a", registry: "n/a", serving: batch, thresholds: "n/a"}
+  llm: {model_criteria: "highest gold-holdout agreement among $0 paths available on the user's machine, validity 100% after OP5V", prompt_versioning: "plain text files per section, vN, QFB review, hash in pipelineVersion", knowledge_sources: ["current section text only"], tool_scopes: [], eval_harness: "SVC7 eval runner over gold holdout per provider; VW7", fallback: "next provider once -> section no_verificado -> metadata-only card"}
+  human: {queue: "eval/queue.csv + VW6", assignment: "two annotators per DOI (QFB, physician); adjudicator not an annotator [specify]", sla: "batch of 10 in 2 weeks [specify]", escalation: "kappa <0.4 -> guideline revision"}
+  label_capture: "OP14 local feedback -> user-initiated export -> eval/feedback-inbox triage -> OP11 candidate items; adjudications are the only eval labels"
+
+cross_cutting:
+  security: {authn: "none (local); provider keys user-supplied", authz_model: RBAC, secrets: "chrome.storage.local only; masked; excluded from logs/exports/diagnostics (tested)", llm_trust_boundary: "visible text only, DOMPurify, no tools, textContent rendering, injection fixtures in CI", audit_log: "local ring buffer (200 ops, no article text); git history for prompts/rules/gold"}
+  observability: {metrics: "CI eval metrics (VW7); pilot survey metrics", logs: "structured local log {runId, op, durationMs, outcome, errorCode, provider, calls}", traces: "runId through all commands", correlation_id: runId, alert_routing: "CI fail -> dev lead; agreement drop -> QFB lead; site-breakage issues -> dev lead"}
+  reliability: {retry_default: "3x exp backoff full jitter base 500 ms cap 8 s; timeouts 5 s scholarly, 60 s LLM section", dead_letter: "none (user re-runs; idempotent)", sagas: [], backup_restore: "user export/import JSON; restore tested in e2e"}
+  environments: ["dev (load-unpacked, mock providers)", "pilot build (feature flags)", "release (GitHub zip, optional Web Store)"]
+
+nfrs:
+  - {name: quote_validity, target: "100%", applies_to: [OP5V], verification: "property tests + eval"}
+  - {name: field_agreement, target: ">=80% per section on holdout", applies_to: [OP5], verification: VW7}
+  - {name: retraction_recall_precision, target: ">=95% / >=98%", applies_to: [OP12], verification: "weekly CI known sample"}
+  - {name: detect_precision, target: ">=97%", applies_to: [OP1], verification: "fixtures >=10 publishers"}
+  - {name: usable_text, target: ">=70%", applies_to: [OP4], verification: "50-page fixture set"}
+  - {name: badge_latency, target: "p95 <=2 s, 25 results warm", applies_to: [OP12, VW2], verification: "Playwright perf"}
+  - {name: panel_metadata_latency, target: "p95 <=1.5 s warm, <=3 s cold (proposed)", applies_to: [OP3, OP12, VW1], verification: "e2e timing"}
+  - {name: summary_latency, target: "p95 <=60 s key, <=120 s local (proposed; [specify] after S1)", applies_to: [OP4, OP5, OP5V], verification: "spike + pilot diagnostics"}
+  - {name: team_cost, target: "$0/month", applies_to: [system], verification: "monthly check"}
+  - {name: privacy, target: "0 requests outside allowlist; 0 keys in exports/logs", applies_to: [system], verification: "allowlist e2e; unit tests"}
+  - {name: install_time, target: "<=15 min (proposed)", applies_to: [release], verification: "observed with 5 students"}
+  - {name: accessibility, target: "WCAG 2.1 AA, axe clean", applies_to: [VW1, VW2, VW3, VW4], verification: "axe in e2e"}
+  - {name: rto_rpo, target: "RTO <=10 min release rollback; RPO = last user export", applies_to: [release], verification: "runbook drill"}
+
+risks:
+  - {risk: "OP5 claim unsupported by quote (RPN 192)", impact: high, likelihood: medium, mitigation: "numbers rule, quote beside claim, agreement gate", owner: "dev + QFB", phase: P3}
+  - {risk: "OP12 retraction missed (RPN 189)", impact: high, likelihood: medium, mitigation: "wording invariant, 2 sources, recheck, recall CI", owner: "dev + physician", phase: P1}
+  - {risk: "OP1 cited-reference DOI (RPN 112)", impact: medium, likelihood: medium, mitigation: "meta first; title confirm", owner: dev, phase: P0}
+  - {risk: "Differentiation vs free LLMs / browser AI", impact: high, likelihood: "medium-high", mitigation: "ADR-0008 gate; verifier pivot", owner: "product lead", phase: P1}
+  - {risk: "No $0 provider meets gate (H-S1)", impact: high, likelihood: "medium-high", mitigation: "spikes S1/S5; per-provider eval", owner: dev, phase: "P0, P3"}
+  - {risk: "Expert hours insufficient", impact: medium, likelihood: medium, mitigation: "batches; concierge doubles as gold", owner: "QFB lead", phase: "P1-P2"}
+  - {risk: "Free tiers change", impact: medium, likelihood: high, mitigation: "port + 3 paths", owner: dev, phase: P3}
+  - {risk: "Site DOM breakage", impact: medium, likelihood: high, mitigation: "meta first; fixtures", owner: dev, phase: all}
+  - {risk: "Chrome LNA blocks localhost Ollama", impact: medium, likelihood: medium, mitigation: "spike S2", owner: dev, phase: P0}
+  - {risk: "Gold-set copyright", impact: medium, likelihood: "low-medium", mitigation: "CC-BY only in public repo", owner: "QFB lead", phase: P1}
+
+map_deltas:
+  - {item: "OP4 actor", map_said: "single op", spec_decides: "DOM part in content script, rest in side panel; one owner SVC3", reason: "DOM only reachable in page context"}
+  - {item: "OP5 retry", map_said: "2x", spec_decides: "2x per provider then next provider once", reason: "quota errors are provider-specific"}
+  - {item: "View IDs", map_said: "VW-A..E (v2)", spec_decides: "VW1..VW7", reason: "stable IDs for stage 3"}
+  - {item: "app/agent/main.py, ocr.py", map_said: "v1 server stub", spec_decides: "deleted with owner approval, 2026-11-06; flow recorded in process-map.md", reason: "records original user flow"}
+
+plan:
+  phases:
+    - {id: P0, goal: "spikes + walking skeleton", units: [S1, S2, S3, S4, S5, S6, S7, SVC0, SVC1, SVC2, SVC3, SVC4, SVC5, SVC6, OP1, OP3, OP12, OP4, OP5, OP5V, OP13, VW1, VW3, VW5], exit_criteria: ["one paper flows detect->export on 3 publishers", "OP5V 0 false accepts on adversarial set", "allowlist, licence, secret gates green", "spike results in ADRs"], estimate: "2-4 wks"}
+    - {id: P1, goal: "flags MVP + concierge", units: [OP12, OP1, VW2, SVC7, OP11, VW6], exit_criteria: ["retraction recall >=95%, precision >=98%", "detect precision >=97%", "badge p95 <=2 s", "kappa batch 1 recorded", "ADR-0008 gate decided"], estimate: "3-5 wks"}
+    - {id: P2, goal: "text + gold set", units: [OP4, OP11, VW7], exit_criteria: ["usable text >=70%", "boundary accuracy >=85%", "gold >=60, kappa >=0.6"], estimate: "4-6 wks"}
+    - {id: P3, goal: "LLM summaries (if gate pass)", units: [OP5, OP5V, OP14, OP13, VW1, VW3, VW4], exit_criteria: [">=1 $0 provider >=80% agreement", "validity 100%", "injection suite pass", "2 wks shadow no validity incident"], estimate: "5-8 wks"}
+    - {id: P3b, goal: "verifier pivot (if gate fail)", units: [OP5, OP5V, VW1], exit_criteria: ["claim-to-quote match >=80%", "validity 100%"], estimate: "4-6 wks"}
+    - {id: P4, goal: "pilot + release", units: [VW1, VW2, VW3, VW4], exit_criteria: ["install >=40%", "week-4 active >=40%", "time reduction measured", "axe clean", "install <=15 min"], estimate: "2-4 wks + semester"}
+  critical_path: ["S1/S5", "OP11 batch 1", "ADR-0008 gate", "gold set to 60", "OP5 eval gate", "P4 pilot"]
+  workstreams:
+    - {name: "Extension platform", units: [SVC0, SVC6, VW1, VW3, VW4, VW5], skills: [TypeScript, WXT, MV3, a11y], owner: "[specify: dev 1]"}
+    - {name: "Scholarly & detection", units: [SVC1, SVC2, OP1, OP3, OP12, VW2], skills: ["APIs", "DOM", testing], owner: "[specify: dev 2]"}
+    - {name: "Text & summary", units: [SVC3, SVC4, SVC5, OP4, OP5, OP5V, OP13, OP14], skills: ["DOM/PDF parsing", "LLM prompting"], owner: "dev 1 + dev 2"}
+    - {name: "Evidence & eval", units: [SVC7, OP11, VW6, VW7], skills: ["clinical methods", Python], owner: "[specify: QFB lead]"}
+    - {name: "Pilot & channel", units: [], skills: ["research coordination"], owner: "[specify: product lead]"}
+  definition_of_done: ["Zod contract tests pass", "rule fixtures", "local log entries with runId", "boundary lint + allowlist e2e green", "strings in _locales", "a11y check (views)", "licence scan green", "runbook section", "acceptance metric recorded", "ADR updated if decision changed"]
+
+traceability:
+  - {kpi: time_reduction, operations: [OP4, OP5, OP5V, OP13, OP11], service: SVC4, views: [VW1, VW4, VW6], tests: ["pilot protocol"], monitored_metric: minutes_per_article}
+  - {kpi: h_v2_preference, operations: [OP11, OP5V], service: SVC7, views: [VW6], tests: ["blind comparison"], monitored_metric: "preference %"}
+  - {kpi: quote_validity, operations: [OP5V], service: SVC4, views: [VW1, VW7], tests: ["property tests", eval], monitored_metric: quote_validity}
+  - {kpi: field_agreement, operations: [OP5, OP11, OP14], service: SVC4, views: [VW7], tests: ["gold holdout"], monitored_metric: field_agreement}
+  - {kpi: retraction_recall, operations: [OP12, OP3], service: SVC2, views: [VW1, VW2], tests: ["known sample CI"], monitored_metric: retraction_recall}
+  - {kpi: install_rate_week4, operations: [OP1, OP3, OP12], service: SVC1, views: [VW1, VW2], tests: ["cohort offer"], monitored_metric: "install_rate, week4_active (survey/opt-in)"}
+  - {kpi: privacy, operations: [OP3, OP12, OP4, OP5], service: SVC0, views: [VW3, VW5], tests: ["allowlist e2e"], monitored_metric: "requests outside allowlist"}
+
+unit_index:
+  - {id: SVC0, kind: service, name: core, service: SVC0, phase: P0, depends_on: [], notes: "retry/limiter, ring log, Dexie v1, runId, flags, i18n"}
+  - {id: SVC6, kind: service, name: settings, service: SVC6, phase: P0, depends_on: [SVC0], notes: "key storage; provider probes"}
+  - {id: OP1, kind: operation, name: "Detect paper", service: SVC1, phase: P0, depends_on: [SVC0], notes: "meta > JSON-LD > regex; cited-DOI trap"}
+  - {id: OP3, kind: operation, name: "Resolve metadata", service: SVC2, phase: P0, depends_on: [OP1], notes: "DOI-only; merge sources"}
+  - {id: OP12, kind: operation, name: "Check status", service: SVC2, phase: "P0-P1", depends_on: [OP3, S3, S6], notes: "wording invariant; batch <=100; EoC separate"}
+  - {id: OP4, kind: operation, name: "Acquire & segment text", service: SVC3, phase: "P0-P2", depends_on: [OP3], notes: "Readability on clone; headings.json; pdf.js"}
+  - {id: OP5V, kind: operation, name: "Validate evidence", service: SVC4, phase: P0, depends_on: [OP4], notes: "normaliser; numbers rule; only Summary writer"}
+  - {id: OP5, kind: operation, name: "Summarise section", service: SVC4, phase: "P0 stub - P3", depends_on: [OP4, OP5V, OP11, S1, S5], notes: "provider port; prompts; fallback chain"}
+  - {id: OP13, kind: operation, name: "Export appraisal sheet", service: SVC5, phase: "P0-P3", depends_on: [OP5V], notes: "template Q6; exclude no_verificado"}
+  - {id: OP14, kind: operation, name: "Capture feedback", service: SVC5, phase: P3, depends_on: [OP5V], notes: "local; export"}
+  - {id: OP11, kind: operation, name: "Expert summary & gold set", service: SVC7, phase: "P1-P2", depends_on: [SVC7], notes: "guideline; double annotation; kappa; concierge render"}
+  - {id: SVC1, kind: service, name: detect, service: SVC1, phase: P0, depends_on: [SVC0], notes: "messaging; badge rendering"}
+  - {id: SVC2, kind: service, name: scholarly, service: SVC2, phase: P0, depends_on: [SVC0], notes: "clients; TTLs; budget counter"}
+  - {id: SVC3, kind: service, name: text, service: SVC3, phase: P0, depends_on: [SVC0, SVC1], notes: "CS/panel split"}
+  - {id: SVC4, kind: service, name: summary, service: SVC4, phase: P0, depends_on: [SVC0, SVC3, SVC6], notes: "adapters; LLM boundary"}
+  - {id: SVC5, kind: service, name: workspace, service: SVC5, phase: P0, depends_on: [SVC4], notes: "templates; feedback"}
+  - {id: SVC7, kind: service, name: eval, service: SVC7, phase: P1, depends_on: [], notes: "JSON Schemas from Zod; runner"}
+  - {id: VW1, kind: view, name: "Paper panel", service: SVC4, phase: "P0-P3", depends_on: [SVC2, SVC4, SVC5], notes: "progressive render; quote beside claim"}
+  - {id: VW5, kind: view, name: Diagnostics, service: SVC0, phase: P0, depends_on: [SVC0], notes: "no article text"}
+  - {id: VW3, kind: view, name: Options, service: SVC6, phase: "P0-P3", depends_on: [SVC6], notes: "privacy table"}
+  - {id: VW2, kind: view, name: "Result-list badges", service: SVC1, phase: P1, depends_on: [OP12, SVC1], notes: "PubMed, Europe PMC"}
+  - {id: VW6, kind: view, name: "Annotation queue", service: SVC7, phase: P1, depends_on: [SVC7], notes: "CLI + local HTML"}
+  - {id: VW7, kind: view, name: "Eval report", service: SVC7, phase: P2, depends_on: [SVC7], notes: "per field/provider"}
+  - {id: VW4, kind: view, name: "Export preview", service: SVC5, phase: P3, depends_on: [OP13], notes: modal}
+
+open_questions: ["Q1-Q10 from map", "Q11 verify licences: Dexie, zod-to-json-schema, eslint-plugin-boundaries/dependency-cruiser", "Q12 OP11 adjudicator", "Q13 pilot instrument for minutes per article"]

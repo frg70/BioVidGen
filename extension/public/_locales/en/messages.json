@@ -1,0 +1,23 @@
+{
+  "extName": { "message": "BioVidGen" },
+  "extDescription": { "message": "Authors, retraction status and a Spanish summary with quotes verified against the paper." },
+  "actionTitle": { "message": "Open BioVidGen" },
+  "panelTitle": { "message": "BioVidGen" },
+  "panelEmpty": { "message": "Open a scientific article to see its details here." },
+  "optionsTitle": { "message": "BioVidGen options" },
+  "optionsEmpty": { "message": "No settings yet." },
+  "panelUntitled": { "message": "Untitled article detected" },
+  "panelDoi": { "message": "DOI" },
+  "panelVersion": { "message": "Preprint version" },
+  "panelPmid": { "message": "PMID" },
+  "panelPmcid": { "message": "PMCID" },
+  "panelPick": { "message": "We found these DOIs. Which one is this article?" },
+  "panelNoId": { "message": "No identifier was found on this page." },
+  "panelList": { "message": "Result list: $COUNT$ articles.","placeholders": { "COUNT": { "content": "$1" }}},
+  "panelManualLabel": { "message": "Know the DOI? Type or paste it here" },
+  "panelManualSubmit": { "message": "Use this DOI" },
+  "panelManualInvalid": { "message": "That doesn't look like a DOI. Example: 10.1234/abcd" },
+  "panelManualTitle": { "message": "Article you entered" },
+  "panelManualNote": { "message": "Entered by you; not checked yet." },
+  "panelManualChange": { "message": "Change DOI" }
+}

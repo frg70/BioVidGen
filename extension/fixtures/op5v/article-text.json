@@ -1,0 +1,39 @@
+{
+  "_note": "Synthetic paper written for BioVidGen tests (no third-party text). Contains NBSP, micro sign, non-breaking hyphens, en dashes, a ligature, curly quotes and a soft hyphen on purpose.",
+  "doi_norm": "10.5555/biovidgen.synthetic.1",
+  "contentHash": "fixture-1",
+  "source": "dom",
+  "sections": {
+    "abstract": {
+      "text": "Background: Vitamin D supplementation may reduce respiratory infections in older adults. Methods: We randomised 412 participants aged 65\u201385 years. Results: Infections fell by 18% (95% CI 6\u201329). Conclusions: Supplementation was associated with fewer infections.",
+      "headingSeen": "Abstract",
+      "mergedWith": null
+    },
+    "methods": {
+      "text": "We conducted a double\u2011blind, placebo\u2011controlled randomised trial in 12 primary care clinics between 2019 and 2022. Participants aged 65\u201385 years were randomly assigned (1:1) to receive 50\u00A0\u00B5g of vitamin D3 daily or a matching placebo for 12 months. Participants were asked to avoid \u201Cover\u2011the\u2011counter\u201D supplements during the trial. The primary outcome was the number of acute respiratory infections confirmed by a clinician. Allocation was concealed using a central web\u2011based system, and participants, clinicians and outcome assessors were masked to group assignment. The sample size of 412 participants provided 80% power to detect a 20% relative reduction at a two\u2011sided α of 0.05.",
+      "headingSeen": "Methods",
+      "mergedWith": null
+    },
+    "results": {
+      "text": "Of 498 people screened, 412 were randomised and 389 (94%) completed follow\u2011up. The mean age was 72.4 years (SD 5.1), and 231 (56%) participants were women. Acute respiratory infections occurred in 81 participants in the vitamin D group and 99 in the placebo group (risk ratio 0.82, 95% CI 0.71\u20130.94; p=0.004). Hospital admissions did not differ between groups (14 vs 17; p=0.58). Serum 25\u2011hydroxyvitamin D increased from 42 to 78 nmol/L in the intervention group. No serious adverse events were attributed to the intervention, although mild hypercalcaemia was reported in 3 participants.",
+      "headingSeen": "Results",
+      "mergedWith": null
+    },
+    "discussion": {
+      "text": "In this trial, daily vitamin D3 reduced the risk of clinician\u2011confirmed respiratory infections by about 18%. The effect was not explained by differences in influenza vaccination, which was similar in both groups. These \uFB01ndings are consistent with earlier meta\u2011analyses but contrast with trials that used large monthly bolus doses. Our study was not powered to detect differences in hospital admissions.",
+      "headingSeen": "Discussion",
+      "mergedWith": null
+    },
+    "conclusions": {
+      "text": "Daily vitamin D3 supple\u00ADmentation was associated with fewer respiratory infections in older adults living in the community. It did not reduce hospital admissions. Further trials should test whether the benefit persists beyond 12 months.",
+      "headingSeen": "Conclusions",
+      "mergedWith": null
+    }
+  },
+  "missing": [],
+  "language": "en",
+  "usable": true,
+  "truncated": false,
+  "headingsVersion": "h1",
+  "schemaVersion": 1
+}

@@ -1,0 +1,254 @@
+{
+  "pubmed": {
+    "url": "https://pubmed.ncbi.nlm.nih.gov/32250385/",
+    "origin": "real",
+    "note": "real anti-bot interstitial: only the URL identifies the paper",
+    "expected": {
+      "kind": "article",
+      "doi": null,
+      "doiSource": null,
+      "pmid": "32250385",
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "pubmed-list": {
+    "url": "https://pubmed.ncbi.nlm.nih.gov/?term=vitamin+d+respiratory",
+    "origin": "real",
+    "expected": {
+      "kind": "result_list",
+      "doi": null,
+      "doiSource": null,
+      "pmid": null,
+      "pmcid": null,
+      "version": null,
+      "resultIds": [
+        {
+          "type": "pmid",
+          "id": "37916701"
+        },
+        {
+          "type": "pmid",
+          "id": "30675873"
+        },
+        {
+          "type": "pmid",
+          "id": "40431395"
+        },
+        {
+          "type": "pmid",
+          "id": "31095224"
+        },
+        {
+          "type": "pmid",
+          "id": "39486479"
+        },
+        {
+          "type": "pmid",
+          "id": "34537990"
+        },
+        {
+          "type": "pmid",
+          "id": "36117182"
+        },
+        {
+          "type": "pmid",
+          "id": "38360214"
+        },
+        {
+          "type": "pmid",
+          "id": "37945979"
+        },
+        {
+          "type": "pmid",
+          "id": "36857810"
+        }
+      ]
+    }
+  },
+  "pmc": {
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7228878/",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1053/j.gastro.2020.05.034",
+      "doiSource": "meta",
+      "pmid": "32422208",
+      "pmcid": "PMC7228878",
+      "version": null
+    }
+  },
+  "europepmc": {
+    "url": "https://europepmc.org/article/MED/32250385",
+    "origin": "real",
+    "note": "real page exposes no paper metadata in the head",
+    "expected": {
+      "kind": "article",
+      "doi": null,
+      "doiSource": null,
+      "pmid": "32250385",
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "biorxiv": {
+    "url": "https://www.biorxiv.org/content/10.1101/2020.02.07.937862v1",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1101/2020.02.07.937862",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": 1
+    }
+  },
+  "springer": {
+    "url": "https://link.springer.com/article/10.1007/s10654-020-00671-y",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1007/s10654-020-00671-y",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "bmc": {
+    "url": "https://bmcmedicine.biomedcentral.com/articles/10.1186/s12916-020-01533-w",
+    "origin": "real",
+    "note": "biomedcentral.com redirected to link.springer.com on 2026-11-05",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1186/s12916-020-01533-w",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "wiley": {
+    "url": "https://onlinelibrary.wiley.com/doi/abs/10.1002/jmv.25678",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1002/jmv.25678",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "mdpi": {
+    "url": "https://www.mdpi.com/1660-4601/17/5/1729",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.3390/ijerph17051729",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "frontiers": {
+    "url": "https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2020.00152/full",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.3389/fpubh.2020.00152",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "plos": {
+    "url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0230548",
+    "origin": "real",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1371/journal.pone.0230548",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "medrxiv": {
+    "url": "https://www.medrxiv.org/content/10.1101/2020.03.04.20031112v2.full",
+    "origin": "synthetic",
+    "note": "real page returned 403 to automation",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1101/2020.03.04.20031112",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": 2
+    }
+  },
+  "sciencedirect": {
+    "url": "https://www.sciencedirect.com/science/article/pii/S0140673620301835",
+    "origin": "synthetic",
+    "note": "real page returned 403 to automation",
+    "expected": {
+      "kind": "article",
+      "doi": "10.1016/s0140-6736(20)30183-5",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "scielo": {
+    "url": "http://www.scielo.org.mx/scielo.php?script=sci_arttext&pid=S0000-00002020000000001",
+    "origin": "synthetic",
+    "note": "metadata tags not recorded; the live page showed DOI 10.21149/11234 in the panel on 2026-11-05",
+    "expected": {
+      "kind": "article",
+      "doi": "10.5555/scielo.synthetic.1",
+      "doiSource": "meta",
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "redalyc": {
+    "url": "https://www.redalyc.org/articulo.oa?id=10653403001",
+    "origin": "real",
+    "note": "this article exposes no DOI in its metadata or text",
+    "expected": {
+      "kind": "article",
+      "doi": null,
+      "doiSource": null,
+      "pmid": null,
+      "pmcid": null,
+      "version": null
+    }
+  },
+  "europepmc-list": {
+    "url": "https://europepmc.org/search?query=vitamin",
+    "origin": "synthetic",
+    "note": "results did not render in automated Chrome: this rule is unverified against the live site",
+    "expected": {
+      "kind": "result_list",
+      "doi": null,
+      "doiSource": null,
+      "pmid": null,
+      "pmcid": null,
+      "version": null,
+      "resultIds": [
+        {
+          "type": "pmid",
+          "id": "32250385"
+        },
+        {
+          "type": "pmid",
+          "id": "32422208"
+        }
+      ]
+    }
+  }
+}

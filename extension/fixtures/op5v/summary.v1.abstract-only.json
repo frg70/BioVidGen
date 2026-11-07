@@ -1,0 +1,29 @@
+{
+  "doi": "10.5555/biovidgen.synthetic.1",
+  "pipelineVersion": "pv-fixture-1",
+  "mainTopic": null,
+  "prerequisiteTopics": [],
+  "sections": {
+    "results": {
+      "summaryEs": "Las infecciones bajaron un 18%.",
+      "status": "abstract_only",
+      "evidence": [
+        {
+          "quote": "Infections fell by 18% (95% CI 6\u201329)",
+          "section": "abstract",
+          "start": 156,
+          "end": 192
+        }
+      ],
+      "rejected": [],
+      "numbersUnsupported": [],
+      "coverage": "full"
+    }
+  },
+  "provider": "stub",
+  "modelId": "stub-0",
+  "promptHash": "p0",
+  "normaliserVersion": "1",
+  "createdAt": "2026-11-05T12:00:00.000Z",
+  "schemaVersion": 1
+}

@@ -1,0 +1,239 @@
+# BioVidGen — discovery-process-mapper spec (input for process-tech-spec)
+# Date: 2026-11-05. Narrative: discovery-process-map.md. Unknowns: [specify: ...]. Assumptions: ASSUMPTION: prefix.
+discovery:
+  mode: light            # + full-depth mapping, non-commercial adaptation
+  verdict: go_with_risks
+  market: {type: resegmented, tam: "1.29M health-science students (MX, 2023-24)", sam: "310k-580k (ASSUMPTION shares)", som: "1k-5k installs in 24 months", confidence: yellow}
+  competitors:
+    - {name: "ChatGPT/Gemini/Copilot free", type: indirect, weakness: "no verbatim evidence check; no retraction/preprint status"}
+    - {name: "Browser-native AI page summaries", type: potential, weakness: "generic; no appraisal structure; [specify: verify availability in MX]"}
+    - {name: SciSpace, type: direct, weakness: "free tier capped; paid; English-first"}
+    - {name: Elicit, type: direct, weakness: "researcher-oriented; English"}
+    - {name: Consensus, type: direct, weakness: "multi-paper Q&A, not single-paper appraisal"}
+    - {name: "Citicious (MIT) / Retraction Alert / RetractCheck / Zotero+RW", type: substitute, weakness: "status only, no summaries"}
+    - {name: "Browser translation", type: substitute, weakness: "translation is not structure"}
+  segments:
+    - {name: "Health-science undergrads in partner courses/journal clubs (MX)", jobs: ["understand an English article fast", "verify understanding against the text", "avoid citing retracted/preprint work", "prepare appraisal sheet"], willingness_to_pay: "$0"}
+    - {name: "Instructors / journal-club moderators", jobs: ["students arrive having understood methods", "no retracted papers cited"], willingness_to_pay: "$0; time to recommend"}
+  job_map:
+    - {stage: define, action: "choose/receive topic", pain: low, importance: 6, satisfaction: 6, os: 6, mapped_to: []}
+    - {stage: locate, action: "search and pick papers", pain: "relevance unclear", importance: 7, satisfaction: 6, os: 8, mapped_to: [OP1, OP12]}
+    - {stage: prepare, action: "get text; check status", pain: "status rarely checked", importance: 6, satisfaction: 4, os: 8, mapped_to: [OP3, OP12]}   # instructor view: I9 S3 OS15
+    - {stage: confirm, action: "understand prerequisites", pain: "jargon/stats", importance: 7, satisfaction: 4, os: 10, mapped_to: [OP5]}
+    - {stage: execute, action: "comprehend methods/results/conclusions in English", pain: "slow, tiring", importance: 9, satisfaction: 3, os: 15, mapped_to: [OP4, OP5, OP11]}
+    - {stage: monitor, action: "check summary against paper", pain: "cannot verify AI output", importance: 8, satisfaction: 3, os: 13, mapped_to: [OP5V]}
+    - {stage: modify, action: "re-read, ask peers", pain: "social cost", importance: 6, satisfaction: 5, os: 7, mapped_to: [OP14]}
+    - {stage: conclude, action: "write appraisal sheet", pain: "re-finding quotes", importance: 8, satisfaction: 4, os: 12, mapped_to: [OP13]}
+  value_proposition: "Entiende cualquier artículo en inglés en español, con la frase exacta que respalda cada punto y su estado de retractación o preprint — gratis, en tu navegador."
+  main_scenario: {segment: "health-science undergrads in partner courses (MX)", monetisation: none, price: "$0", cac: "ASSUMPTION: ~1 h instructor time per cohort", churn: "semester-bound"}
+  hypotheses:
+    - {id: H-N1, type: need, statement: ">45 min per English article; translator/ChatGPT used", risk: medium, method: "10 Mom-Test interviews", criterion: ">=7/10", tested_by: [], status: untested}
+    - {id: H-D1, type: demand, statement: "instructor recommendation drives install and use", risk: high, method: "cohort offer after E0", criterion: ">=40% install in 2 wk; >=40% of installers active wk 4", tested_by: [OP1, OP3, OP12], status: untested}
+    - {id: H-V1, type: value, statement: "evidence summary cuts minutes/article >=30% without accuracy loss", risk: high, method: "concierge then live tool", criterion: ">=30% reduction; non-inferior accuracy [specify: margin]", tested_by: [OP11, OP5, OP5V, OP13], status: untested}
+    - {id: H-V2, type: value, statement: "students prefer verified summary over free ChatGPT summary", risk: high, method: "blind comparison + planted-error task", criterion: ">=60% preference and more errors detected", tested_by: [OP11, OP5V], status: untested}
+    - {id: H-S1, type: solution, statement: "a $0 provider meets >=80% agreement and 100% quote validity on student hardware/free key", risk: high, method: "spikes S1/S5 + gold-set eval", criterion: "gate met by >=1 path available to >=70% of cohort", tested_by: [OP5, OP5V], status: untested}
+    - {id: H-S2, type: solution, statement: ">=70% of target pages yield usable section text", risk: medium, method: "50-page sample", criterion: ">=70%", tested_by: [OP4], status: untested}
+    - {id: H-C1, type: channel, statement: "instructors at >=2 institutions recommend it", risk: medium, method: "demo to 5-8 instructors", criterion: ">=2 commit", tested_by: [OP12], status: untested}
+    - {id: H-Sc1, type: scalability, statement: "$0/month team cost and <=8 h/month maintenance at 5k users", risk: medium, method: "model + one semester tracking", criterion: "holds", tested_by: [], status: untested}
+  red_flags:
+    - {signal: "No differentiation (amber)", value: "components exist free elsewhere; only combination + verified quotes unique", action: "test H-V2 before E2; keep 'verifier' pivot ready"}
+  readiness: {stage: idea, score: "4.5/8 (adapted, non-commercial)", gaps: ["pain not confirmed by interviews", "no retention data", "no traction", "maintenance capacity unknown"]}
+process:
+  name: "BioVidGen local-first article comprehension and status check"
+  problems:
+    - "P1 English methods/results take students too long (minutes/article)"
+    - "P2 students cannot verify AI summaries against the text"
+    - "P3 retracted/preprint/EoC papers used unknowingly"
+    - "P4 appraisal sheet assembly is slow"
+  objective: "minimize minutes_per_article subject to appraisal_accuracy non-inferior, quote_validity = 100%, field_agreement >= 80%, team_cost = $0/month"
+  target_variable: {name: minutes_per_article, formula: "observed or self-timed minutes from open to completed appraisal, per article", unit: min}
+  kpis:
+    - {name: install_rate, formula: "installs / invited cohort", unit: "%", target: ">=40% in 2 weeks"}
+    - {name: week4_active, formula: "users active in week 4 / installers (survey or opt-in counts)", unit: "%", target: ">=40%"}
+    - {name: sean_ellis, formula: "'very disappointed' / respondents", unit: "%", target: ">=40%"}
+    - {name: time_reduction, formula: "1 - minutes_with_tool / minutes_baseline", unit: "%", target: ">=30%"}
+  as_is_baseline: {cycle_time: "ASSUMPTION 2-3.5 h per article", throughput: "2-4 articles/student/month", cost_per_unit: "$0 cash; student time", defect_rate: "[pending]", bottleneck: "Execute (English comprehension)"}
+  end_to_end_error_budget: {target_yield: ">=0.60 full verified summary; >=0.94 metadata+status", per_operation_targets: {OP1: "0.97", OP3: "0.97", OP4: "0.80", OP5_OP5V: "0.85 (>=3 of 4 sections verified)", OP12: "0.97"}}
+unit_economics:
+  price_per_unit: "$0"
+  ops_cost_per_unit: "$0 to team (runs on user machine); user: $0 within free quotas"
+  infra_cost_per_unit: "$0 (no backend); $5 one-off Chrome Web Store fee"
+  gross_margin: {value: "N/A (no revenue)", target: "team cash cost = $0/month; user quota headroom >= 3x"}
+  ltv_cac: "N/A"
+  gap_closers:
+    - {operation: OP11, migration: "full concierge annotation -> audit-only (~10 articles per prompt/model change)", trigger: "gold set >=60 articles AND OP5 agreement >=80% on holdout", new_cost: "~20 expert-h per change vs 105-135 h initial"}
+entities:
+  - name: PageContext
+    identity: {key: "tab_id + url", type: surrogate, dedup_rule: "latest navigation wins"}
+    storage: document   # memory only
+    invariants: ["kind = article => doi or pmid or title present"]
+    interface: [detectPaper]
+    properties:
+      - {name: doi, type: string, unit: "", source_field: "citation_doi | dc.identifier | JSON-LD | URL regex", certainty: measured, confidence: "inferred when regex-only", visibility: public, crud: {create: OP1, read: SP, update: OP1, delete: "tab close"}}
+      - {name: kind, type: "enum{article,result_list,other}", unit: "", source_field: "OP1 rules", certainty: inferred, confidence: "", visibility: internal, crud: {create: OP1, read: SP, update: OP1, delete: "tab close"}}
+    relationships:
+      - {to: Article, relation: identifies, cardinality: "N:1", optional: true, ownership: reference}
+  - name: Article
+    identity: {key: normalized_doi, type: natural, dedup_rule: "lowercase DOI without resolver prefix; fallback openalex_id, then url hash; preprint and published linked not merged"}
+    storage: document   # IndexedDB
+    invariants: ["year <= current year", "keywords carry source tag"]
+    interface: [upsertFromOpenAlex, upsertFromCrossref, read]
+    properties:
+      - {name: authors, type: "list", unit: "", source_field: "OpenAlex authorships", certainty: measured, confidence: green, visibility: public, crud: {create: OP3, read: all, update: "refresh 30d", delete: "clear all"}}
+      - {name: keywords, type: "list{term,source}", unit: "", source_field: "page meta ∪ OpenAlex keywords/topics", certainty: measured, confidence: green, visibility: public, crud: {create: OP3, read: all, update: "refresh 30d", delete: "clear all"}}
+      - {name: type, type: string, unit: "", source_field: "OpenAlex type / Crossref type", certainty: measured, confidence: green, visibility: public, crud: {create: OP3, read: OP12, update: refresh, delete: "clear all"}}
+      - {name: oa_url, type: url, unit: "", source_field: "Unpaywall/OpenAlex", certainty: measured, confidence: yellow, visibility: internal, crud: {create: OP3, read: OP4, update: refresh, delete: "clear all"}}
+    relationships:
+      - {to: StatusCheck, relation: has, cardinality: "1:N", optional: false, ownership: composition}
+      - {to: ArticleText, relation: has, cardinality: "1:N", optional: true, ownership: composition}
+      - {to: Summary, relation: has, cardinality: "1:N", optional: true, ownership: composition}
+      - {to: Article, relation: "is preprint of", cardinality: "1:1", optional: true, ownership: reference}
+  - name: StatusCheck
+    identity: {key: "article_key + checked_at", type: surrogate, dedup_rule: "append-only"}
+    storage: document
+    invariants: ["retraction only from retraction sources", "never display 'not retracted'; display 'no retraction found in {sources} on {date}'", "EoC/correction distinct from retraction"]
+    interface: [checkStatus, checkStatusBatch]
+    properties:
+      - {name: retraction_nature, type: "enum{none_found,retraction,expression_of_concern,correction,reinstatement}", unit: "", source_field: "OpenAlex is_retracted; Crossref updates (Retraction Watch)", certainty: measured, confidence: "source-limited", visibility: public, crud: {create: OP12, read: "VW-A, VW-B, OP13", update: never, delete: "TTL GC"}}
+      - {name: is_preprint, type: bool, unit: "", source_field: "type + DOI prefix + posted-content", certainty: derived, confidence: green, visibility: public, crud: {create: OP12, read: views, update: never, delete: "TTL GC"}}
+      - {name: checked_at, type: timestamp, unit: UTC, source_field: system, certainty: measured, confidence: green, visibility: public, crud: {create: OP12, read: views, update: never, delete: "TTL GC"}}
+    relationships: []
+  - name: ArticleText
+    identity: {key: "article_key + content_hash", type: surrogate, dedup_rule: "hash"}
+    storage: document   # session memory by default
+    invariants: ["abstract_only => summary banner 'solo resumen'"]
+    interface: [acquireText]
+    properties:
+      - {name: sections, type: "map name->text", unit: chars, source_field: "Readability / OA XML / pdf.js", certainty: derived, confidence: "", visibility: internal, crud: {create: OP4, read: "OP5, OP5V", update: "better source", delete: "session end unless pinned"}}
+      - {name: source, type: "enum{dom,oa_html,oa_xml,pdfjs,abstract_only}", unit: "", source_field: OP4, certainty: measured, confidence: green, visibility: public, crud: {create: OP4, read: views, update: OP4, delete: "session end"}}
+    relationships: []
+  - name: Summary
+    identity: {key: "article_key + pipeline_version(prompt_hash, model_id, schema_version)", type: surrogate, dedup_rule: "same key returns cached"}
+    storage: document
+    invariants: ["every summary_es has >=1 verified quote or status no_verificado", "quotes are substrings of the declared section after normalisation", "numbers in summary_es appear in a quote", "prerequisite_topics labelled background_knowledge", "no quality verdict field"]
+    interface: [validateAndStore, read]
+    properties:
+      - {name: methodology, type: "struct{summary_es, design?, n?, statistics?, evidence[]}", unit: "", source_field: "OP5 draft", certainty: inferred, confidence: "derived where quote-validated", visibility: public, crud: {create: OP5V, read: "VW-A, OP13", update: never, delete: "clear all"}}
+      - {name: section_status, type: "enum{verified,no_verificado,abstract_only,failed}", unit: "", source_field: OP5V, certainty: derived, confidence: green, visibility: public, crud: {create: OP5V, read: views, update: never, delete: "clear all"}}
+    relationships:
+      - {to: Feedback, relation: has, cardinality: "1:N", optional: true, ownership: composition}
+  - name: Feedback
+    identity: {key: auto, type: surrogate, dedup_rule: "summary+section+kind"}
+    storage: document
+    invariants: ["never transmitted automatically"]
+    interface: [markSection, exportFeedback]
+    properties: []
+    relationships: []
+  - name: Settings
+    identity: {key: singleton, type: surrogate, dedup_rule: n/a}
+    storage: document   # chrome.storage.local
+    invariants: ["api keys never in sync storage, logs, prompts or exports"]
+    interface: [optionsPage]
+    properties: []
+    relationships: []
+  - name: GoldItem
+    identity: {key: "doi + annotator + version", type: natural, dedup_rule: "versioned"}
+    storage: document   # files in eval/gold (CC-BY only if public)
+    invariants: ["adjudicated version exists before use as test label"]
+    interface: [annotate, adjudicate]
+    properties: []
+    relationships:
+      - {to: Article, relation: annotates, cardinality: "N:1", optional: false, ownership: reference}
+operations:
+  - {id: OP1, name: "Detect paper", job_map_stage: locate, opportunity_score: 8, mvp: true, tests_hypotheses: [H-D1], input: ["DOM meta", url], output: ["PageContext.*"], method_class: DETERMINISTIC, why: "meta/regex rules", knowledge_required: "citation_*, DC, JSON-LD, DOI/PMID syntax", hybrid_fallback: "meta -> site selector -> user pastes DOI", migration_signal: none,
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "pure function of DOM"}, deterministic: {value: true, pinned: "rule version"}, side_effects: [], atomic: {value: true, boundary: n/a}, reversible: {value: true, compensation: n/a}, retry: "debounced re-run on DOM mutation", ordering: "latest navigation wins", state: stateless},
+     contract_in: {schema: "DOM", checks: ["prefer citation_doi over body regex"], on_violation: "ask user to confirm"},
+     failure_modes: [{mode: "cited-reference DOI detected", effect: "wrong paper", severity: 7, occurrence: 4, detection: 4, rpn: 112, mitigation: "meta first; show title to confirm"}],
+     error_costs: {false_positive: "summary of wrong paper", false_negative: "manual DOI entry"},
+     metrics: [{name: detect_precision, formula: "correct / detected", unit: "%", target: ">=97%"}], cost_per_unit: "$0",
+     governance: {sensitive_data: [], regulation: [], external_models_allowed: false},
+     deploy: {mode: event, interface: "content script", rollout: "fixtures -> pilot", rollback_trigger: "precision < 95% on fixtures"},
+     label_capture: "user DOI correction", telemetry: [{metric: "selector breakages", frequency: continuous, instrument: "GitHub issues", alert_threshold: ">2/week", alert_owner: "dev lead"}],
+     adapt_rules: [{condition: "breakages >2/week", action: "generic meta over site rules"}], owner: {accountable: "dev lead", consulted: [], informed: []}, actor_identity: "content script"}
+  - {id: OP3, name: "Resolve metadata", job_map_stage: prepare, opportunity_score: 9, mvp: true, tests_hypotheses: [H-D1], input: ["PageContext.doi"], output: ["Article.*"], method_class: DETERMINISTIC, why: "structured lookups", knowledge_required: "OpenAlex, Crossref schemas", hybrid_fallback: "OpenAlex -> Crossref -> page meta -> stale cache", migration_signal: none,
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "upsert by DOI"}, deterministic: {value: false, pinned: "fetched_at stored"}, side_effects: ["GET OpenAlex/Crossref (DOI only)"], atomic: {value: true, boundary: article}, reversible: {value: true, compensation: "cache"}, retry: "3x exp backoff + jitter, 5 s timeout", ordering: none, state: stateless},
+     contract_in: {schema: "normalised DOI", checks: ["DOI regex"], on_violation: "manual entry"},
+     failure_modes: [{mode: "wrong title match", effect: "wrong authors", severity: 6, occurrence: 2, detection: 4, rpn: 48, mitigation: "DOI-only resolution"}],
+     error_costs: {false_positive: "wrong metadata", false_negative: "sparse card"}, metrics: [{name: coverage, formula: "articles with authors&keywords / resolved", unit: "%", target: ">=90%"}], cost_per_unit: "$0",
+     governance: {sensitive_data: [], regulation: [], external_models_allowed: false}, deploy: {mode: event, interface: "side panel", rollout: "pilot", rollback_trigger: "error rate >10%"},
+     label_capture: none, telemetry: [{metric: "API error rate", frequency: "per release", instrument: "recorded fixtures + debug panel", alert_threshold: ">10%", alert_owner: "dev lead"}],
+     adapt_rules: [{condition: "field gap", action: "add source"}], owner: {accountable: "dev lead", consulted: [], informed: []}, actor_identity: "side panel orchestrator"}
+  - {id: OP12, name: "Check status (preprint/retraction/EoC)", job_map_stage: prepare, opportunity_score: 15, mvp: true, tests_hypotheses: [H-C1, H-D1], input: ["Article.doi", "Article.type"], output: ["StatusCheck.*"], method_class: DETERMINISTIC, why: "lookups not inference", knowledge_required: "OpenAlex is_retracted/type; Crossref updates incl. Retraction Watch; preprint prefixes", hybrid_fallback: "two sources OR-ed; batch for lists; single lookups fallback", migration_signal: "none; evaluate reuse of Citicious (MIT) [specify: verify]",
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "append-only per check"}, deterministic: {value: false, pinned: "sources + checked_at"}, side_effects: ["GET OpenAlex/Crossref"], atomic: {value: true, boundary: DOI}, reversible: {value: true, compensation: n/a}, retry: "as OP3", ordering: none, state: stateless},
+     contract_in: {schema: "DOI list <=100", checks: ["normalised"], on_violation: "skip item, badge '?'"},
+     failure_modes: [{mode: "retraction missed", effect: "trust in retracted work", severity: 9, occurrence: 3, detection: 7, rpn: 189, mitigation: "careful wording, two sources, recheck on display, recall test"}, {mode: "preprint undetected", effect: "weak evidence as published", severity: 6, occurrence: 3, detection: 5, rpn: 90, mitigation: "type+prefix+posted-content"}],
+     error_costs: {false_positive: "over-alarm, correctable", false_negative: "dangerous"}, metrics: [{name: retraction_recall, formula: "flagged / known retracted", unit: "%", target: ">=95%"}, {name: flags_p95, formula: "p95 page annotate time", unit: s, target: "<=2 (25 results, warm)"}], cost_per_unit: "~$0.0001 per list page",
+     governance: {sensitive_data: [], regulation: [], external_models_allowed: false}, deploy: {mode: event, interface: "side panel chips + list badges", rollout: "PubMed + Europe PMC first", rollback_trigger: "recall <90%"},
+     label_capture: "user report 'status wrong'", telemetry: [{metric: retraction_recall, frequency: weekly, instrument: "CI on refreshed RW sample", alert_threshold: "<95%", alert_owner: "dev lead"}],
+     adapt_rules: [{condition: "recall drop", action: "add source / prefix"}], owner: {accountable: "dev lead", consulted: [physician], informed: [moderators]}, actor_identity: "side panel orchestrator; content script renders badges"}
+  - {id: OP4, name: "Acquire & segment text", job_map_stage: execute, opportunity_score: 15, mvp: true, tests_hypotheses: [H-S2], input: ["DOM clone", "Article.oa_url"], output: ["ArticleText.*"], method_class: DETERMINISTIC, why: "Readability + heading rules", knowledge_required: "IMRaD headings es/en; Europe PMC XML; pdf.js", hybrid_fallback: "DOM -> OA HTML/XML -> pdf.js -> abstract-only", migration_signal: "usable <70% -> optional companion (ADR-0006)",
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "content hash"}, deterministic: {value: true, pinned: "heading dictionary version"}, side_effects: ["GET OA source"], atomic: {value: true, boundary: article}, reversible: {value: true, compensation: discard}, retry: "network only", ordering: none, state: stateless},
+     contract_in: {schema: "DOM or URL", checks: ["visible text only", "DOMPurify"], on_violation: "abstract-only"},
+     failure_modes: [{mode: "wrong section boundaries", effect: "misplaced quotes", severity: 6, occurrence: 4, detection: 4, rpn: 96, mitigation: "fixtures; validator checks declared section"}, {mode: "hidden injected text", effect: "prompt injection", severity: 7, occurrence: 2, detection: 5, rpn: 70, mitigation: "visible text only; OP5 has no tools"}],
+     error_costs: {false_positive: n/a, false_negative: "abstract-only"}, metrics: [{name: usable_text, formula: "pages with usable sections / pages", unit: "%", target: ">=70%"}], cost_per_unit: "$0",
+     governance: {sensitive_data: [], regulation: ["copyright: session-only storage"], external_models_allowed: false}, deploy: {mode: realtime, interface: "side panel", rollout: "fixtures -> pilot", rollback_trigger: "usable <60%"},
+     label_capture: none, telemetry: [{metric: usable_text, frequency: "per release", instrument: "50-page fixture set", alert_threshold: "<70%", alert_owner: "dev lead"}],
+     adapt_rules: [{condition: "usable <70%", action: "companion path ADR"}], owner: {accountable: "dev lead", consulted: [], informed: []}, actor_identity: "content script (DOM) + side panel (OA fetch)"}
+  - {id: OP11, name: "Expert summary & gold set (concierge)", job_map_stage: execute, opportunity_score: 15, mvp: true, tests_hypotheses: [H-V1, H-V2, H-S1], input: ["article text"], output: ["GoldItem.*"], method_class: HUMAN, why: "no labels; accountability; concierge test before code", knowledge_required: "clinical research methods", hybrid_fallback: "2 annotators + adjudication", migration_signal: "gold >=60 and OP5 >=80% -> audit-only",
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "doi+annotator+version"}, deterministic: {value: false, pinned: "guideline version"}, side_effects: ["commit to eval/gold"], atomic: {value: true, boundary: "one annotation"}, reversible: {value: true, compensation: "new version"}, retry: n/a, ordering: "annotate -> adjudicate", state: stateful},
+     contract_in: {schema: "article + guideline", checks: ["licence allows storage"], on_violation: "private store"},
+     failure_modes: [{mode: "annotator disagreement", effect: "noisy gold", severity: 6, occurrence: 5, detection: 3, rpn: 90, mitigation: "guideline, kappa, adjudication"}],
+     error_costs: {false_positive: n/a, false_negative: n/a}, metrics: [{name: kappa, formula: "Cohen kappa per field", unit: "", target: ">=0.6 [specify]"}, {name: hours_per_article, formula: "sum annotator hours / articles", unit: h, target: "<=2.25"}], cost_per_unit: "~1.75-2.25 expert-h/article (ASSUMPTION)",
+     governance: {sensitive_data: [], regulation: ["copyright/licence of stored texts"], external_models_allowed: false}, deploy: {mode: batch, interface: "annotation sheet + eval/", rollout: "batches of 10", rollback_trigger: "kappa <0.4"},
+     label_capture: "is the label source", telemetry: [{metric: kappa, frequency: "per batch", instrument: "eval runner", alert_threshold: "<0.6", alert_owner: "QFB lead"}],
+     adapt_rules: [{condition: "kappa <0.6", action: "revise guideline"}], owner: {accountable: "QFB lead", consulted: [physician], informed: ["dev lead"]}, actor_identity: "annotator (git identity)"}
+  - {id: OP5, name: "Summarise section", job_map_stage: execute, opportunity_score: 15, mvp: true, tests_hypotheses: [H-S1, H-V1, H-V2], input: ["ArticleText.sections", "Article.title"], output: ["draft{summary_es, evidence[]}"], method_class: LLM, why: "comprehension + Spanish generation with few labels", knowledge_required: "section text only", hybrid_fallback: "LLM -> OP5V -> no_verificado; OP11 for gold", migration_signal: "starts as OP11 concierge; LLM after gate; DSPy offline if plateau",
+     llm_context: {knowledge_sources: ["current section text"], tools: []},
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "cache by text hash + pipeline_version"}, deterministic: {value: false, pinned: "temperature 0 where supported, prompt hash, model id"}, side_effects: ["call to chosen LLM provider"], atomic: {value: true, boundary: section}, reversible: {value: true, compensation: "discard draft"}, retry: "2x on 429/5xx backoff+jitter; 60 s timeout; no DLQ", ordering: "4 independent calls", state: stateless},
+     contract_in: {schema: "section text <= provider context", checks: ["usable section"], on_violation: "skip section"},
+     failure_modes: [{mode: "claim not supported by quote", effect: "wrong understanding", severity: 8, occurrence: 4, detection: 6, rpn: 192, mitigation: "numbers-in-quote rule; quote beside claim; agreement eval"}, {mode: "prompt injection", effect: "malicious output", severity: 7, occurrence: 2, detection: 4, rpn: 56, mitigation: "no tools; schema; text rendering; fixtures"}],
+     error_costs: {false_positive: "wrong claim shown verified (severe)", false_negative: "section hidden (mild)"}, metrics: [{name: field_agreement, formula: "matched fields / gold fields", unit: "%", target: ">=80%"}, {name: p95_summary, formula: "p95 seconds per paper", unit: s, target: "[specify] per provider"}], cost_per_unit: "$0 (Nano/Ollama) or within free quota",
+     governance: {sensitive_data: [], regulation: ["provider terms; free tier may train on inputs"], external_models_allowed: true}, deploy: {mode: realtime, interface: "side panel", rollout: "shadow -> pilot -> 2 institutions -> public", rollback_trigger: "agreement <80% or any unverified quote shown as verified"},
+     label_capture: "OP14 feedback + OP11 audits", telemetry: [{metric: validator_reject_rate, frequency: "per pilot", instrument: "diagnostics export", alert_threshold: ">30%", alert_owner: "dev lead"}],
+     adapt_rules: [{condition: "agreement <80% after 2 rounds", action: "field default no_verificado or HUMAN; consider DSPy offline"}, {condition: "H-V2 fails", action: "pivot to verifier mode"}], owner: {accountable: "dev lead", consulted: ["QFB lead"], informed: [physician]}, actor_identity: "side panel provider adapter"}
+  - {id: OP5V, name: "Validate evidence", job_map_stage: monitor, opportunity_score: 13, mvp: true, tests_hypotheses: [H-V2, H-S1], input: ["draft", "ArticleText.sections"], output: ["Summary.*"], method_class: DETERMINISTIC, why: "exact substring and number checks", knowledge_required: "normalisation rules", hybrid_fallback: "is the fallback", migration_signal: none,
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: pure}, deterministic: {value: true, pinned: "normaliser version"}, side_effects: ["store Summary"], atomic: {value: true, boundary: summary}, reversible: {value: true, compensation: "new version"}, retry: n/a, ordering: "after OP5", state: stateless},
+     contract_in: {schema: "Zod draft schema", checks: ["section in known set"], on_violation: "section failed"},
+     failure_modes: [{mode: "over-normalisation accepts near-quote", effect: "weak guarantee", severity: 7, occurrence: 2, detection: 5, rpn: 70, mitigation: "property tests; exact after normalisation; min length"}],
+     error_costs: {false_positive: "fake quote accepted (severe)", false_negative: "true quote rejected (mild)"}, metrics: [{name: quote_validity, formula: "verified shown quotes / shown quotes", unit: "%", target: "100%"}], cost_per_unit: "~0",
+     governance: {sensitive_data: [], regulation: [], external_models_allowed: false}, deploy: {mode: realtime, interface: "in-process", rollout: "with OP5", rollback_trigger: "any false accept"},
+     label_capture: none, telemetry: [{metric: false_accept_adversarial, frequency: CI, instrument: "property tests", alert_threshold: ">0", alert_owner: "dev lead"}],
+     adapt_rules: [{condition: "false reject >10% on fixtures", action: "refine normaliser"}], owner: {accountable: "dev lead", consulted: [], informed: []}, actor_identity: "side panel orchestrator"}
+  - {id: OP13, name: "Export appraisal sheet", job_map_stage: conclude, opportunity_score: 12, mvp: true, tests_hypotheses: [H-V1], input: ["Summary", "Article", "StatusCheck"], output: ["markdown/clipboard"], method_class: DETERMINISTIC, why: templating, knowledge_required: "club sheet format [specify]", hybrid_fallback: "Markdown + clipboard", migration_signal: none,
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: pure}, deterministic: {value: true, pinned: "template version"}, side_effects: ["clipboard/download (user-initiated)"], atomic: {value: true, boundary: export}, reversible: {value: true, compensation: n/a}, retry: n/a, ordering: none, state: stateless},
+     contract_in: {schema: "Summary", checks: ["status line present"], on_violation: "block export"},
+     failure_modes: [{mode: "unverified exported as verified", effect: "over-trust off-tool", severity: 7, occurrence: 3, detection: 3, rpn: 63, mitigation: "status marks; exclude no_verificado by default"}],
+     error_costs: {false_positive: n/a, false_negative: n/a}, metrics: [{name: minutes_to_sheet, formula: "pilot timing", unit: min, target: "-50% vs baseline (proposed)"}], cost_per_unit: "0",
+     governance: {sensitive_data: [], regulation: [], external_models_allowed: false}, deploy: {mode: realtime, interface: "side panel button", rollout: "with E2", rollback_trigger: "n/a"},
+     label_capture: none, telemetry: [], adapt_rules: [{condition: "template change request", action: "update template file"}], owner: {accountable: "dev lead", consulted: [moderator], informed: []}, actor_identity: "side panel"}
+  - {id: OP14, name: "Capture feedback", job_map_stage: modify, opportunity_score: 7, mvp: true, tests_hypotheses: [], input: ["Summary"], output: ["Feedback.*"], method_class: DETERMINISTIC, why: "local record", knowledge_required: none, hybrid_fallback: none, migration_signal: none,
+     properties: {encapsulated: true, idempotent: {value: true, mechanism: "summary+section+kind"}, deterministic: {value: true, pinned: n/a}, side_effects: ["IndexedDB write"], atomic: {value: true, boundary: record}, reversible: {value: true, compensation: delete}, retry: n/a, ordering: none, state: stateless},
+     contract_in: {schema: Feedback, checks: [], on_violation: reject},
+     failure_modes: [{mode: "lost on clear all", effect: "labels lost", severity: 2, occurrence: 3, detection: 2, rpn: 12, mitigation: "warn + export prompt"}],
+     error_costs: {false_positive: n/a, false_negative: n/a}, metrics: [{name: marks_per_summary, formula: "marks / summaries", unit: "", target: "[specify]"}], cost_per_unit: "0",
+     governance: {sensitive_data: [], regulation: [], external_models_allowed: false}, deploy: {mode: realtime, interface: "side panel", rollout: "E2", rollback_trigger: n/a},
+     label_capture: "(summary key, section, model text, mark, note, at)", telemetry: [], adapt_rules: [], owner: {accountable: "dev lead", consulted: [], informed: []}, actor_identity: "side panel"}
+access_control:
+  model: RBAC
+  matrix:
+    - {actor: content_script, resource: "PageContext.*", c: true, r: true, u: true, d: true, condition: "own tab; no network; no Settings"}
+    - {actor: side_panel, resource: "Article/StatusCheck/ArticleText/Summary/Feedback", c: true, r: true, u: true, d: true, condition: "user-initiated or detected article"}
+    - {actor: provider_adapter, resource: "Settings.api_key", c: false, r: true, u: false, d: false, condition: "selected provider only"}
+    - {actor: llm_provider_external, resource: "ArticleText.section", c: false, r: true, u: false, d: false, condition: "one section per call; nothing else"}
+    - {actor: scholarly_apis_external, resource: "Article.doi", c: false, r: true, u: false, d: false, condition: "DOI/title only"}
+    - {actor: user_options_page, resource: "Settings.*", c: true, r: true, u: true, d: true, condition: user}
+    - {actor: annotator, resource: "GoldItem.*", c: true, r: true, u: true, d: false, condition: "PR review by QFB lead"}
+  separation_of_duties: ["prompt changes require QFB review + eval pass", "gold-set adjudicator differs from annotators"]
+  secrets: {storage: "chrome.storage.local (never sync); never in repo/logs/prompts/exports", rotation: "user at provider"}
+  audit_log: {events: ["local debug log of op runs (no article text)", "git history for prompts and gold set"], retention: "last N=200 ops locally; git forever"}
+open_questions:
+  - "Q1 Mom-Test interviews to replace assumed OS (product lead)"
+  - "Q2 partner instructors/institutions (team lead)"
+  - "Q3 target student hardware (cohort survey)"
+  - "Q4 Citicious code/licence: reuse vs build OP12 (dev lead)"
+  - "Q5 browser-native AI summaries availability in MX (dev lead)"
+  - "Q6 appraisal sheet format (moderator)"
+  - "Q7 gold-set licensing (QFB lead)"
+  - "Q8 expert hours/month (QFB lead, physician)"
+  - "Q9 non-inferiority margin for appraisal accuracy (physician)"
+  - "Q10 protocol artifact unreachable; confirm figures (team)"

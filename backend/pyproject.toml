@@ -1,0 +1,46 @@
+[project]
+name = "biovidgen-backend"
+version = "0.0.1"
+description = "BioVidGen local backend (ADR-0010): serves the Chrome extension and the local app on 127.0.0.1 only."
+license = "MIT"
+requires-python = ">=3.12,<3.13"
+# Runtime dependencies: owner-approved 2026-11-05 (ADR-0010). Licences in the dependency register.
+# Outbound HTTP uses the standard library (urllib + OS certificate store), never httpx at runtime.
+dependencies = [
+  "fastapi==0.162.0",
+  "uvicorn==0.54.0",
+  "pydantic==2.14.3",
+]
+
+[dependency-groups]
+dev = [
+  "pytest==9.2.0",
+  "hypothesis==6.170.15",
+  "ruff==0.17.3",
+  "httpx==0.28.1", # FastAPI TestClient only; never imported by src/
+]
+
+[project.scripts]
+biovidgen = "biovidgen.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "biovidgen"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "BLE", "SIM", "RUF"]
+ignore = ["S101"] # asserts are fine in tests
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S104", "S105", "S106", "E501"] # fake tokens, refused bind addresses, catalog-text docstrings
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

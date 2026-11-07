@@ -1,0 +1,19 @@
+{
+  "version": "1.0.0",
+  "entries": [
+    {"id":"pubmed","matches":["https://pubmed.ncbi.nlm.nih.gov/*"],"host":"pubmed.ncbi.nlm.nih.gov","urlPmid":"^/(\\d{1,9})/?$","listPattern":"[?&]term=","listIdSelector":".docsum-pmid","listIdFrom":"text","listIdPattern":"^(\\d{1,9})$"},
+    {"id":"pmc","matches":["https://pmc.ncbi.nlm.nih.gov/*"],"host":"pmc.ncbi.nlm.nih.gov","urlPmcid":"^/articles/(PMC\\d{1,9})"},
+    {"id":"europepmc","matches":["https://europepmc.org/*"],"host":"europepmc.org","urlPmid":"^/(?:article|abstract)/MED/(\\d{1,9})","urlPmcid":"^/(?:article|abstract)/PMC/(PMC\\d{1,9})","listPattern":"^/search","listIdSelector":"a[href*=\"/article/MED/\"]","listIdFrom":"href","listIdPattern":"/article/MED/(\\d{1,9})","ignoreKeywords":true},
+    {"id":"biorxiv","matches":["https://www.biorxiv.org/*"]},
+    {"id":"medrxiv","matches":["https://www.medrxiv.org/*"]},
+    {"id":"sciencedirect","matches":["https://www.sciencedirect.com/*"]},
+    {"id":"springer","matches":["https://link.springer.com/*"]},
+    {"id":"bmc","matches":["https://*.biomedcentral.com/*"]},
+    {"id":"wiley","matches":["https://*.onlinelibrary.wiley.com/*"]},
+    {"id":"mdpi","matches":["https://www.mdpi.com/*"]},
+    {"id":"frontiers","matches":["https://www.frontiersin.org/*"]},
+    {"id":"plos","matches":["https://journals.plos.org/*"]},
+    {"id":"scielo","matches":["*://www.scielo.org.mx/*","https://www.scielo.br/*","https://*.scielo.org/*"]},
+    {"id":"redalyc","matches":["https://www.redalyc.org/*"]}
+  ]
+}

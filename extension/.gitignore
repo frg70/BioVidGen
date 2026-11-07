@@ -1,0 +1,7 @@
+node_modules/
+.output/
+.wxt/
+playwright-report/
+test-results/
+blob-report/
+*.zip
