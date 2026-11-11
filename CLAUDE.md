@@ -1,6 +1,6 @@
 # BioVidGen — instructions for Claude Code
 
-BioVidGen is an open-source (MIT), local-first tool for health-science students in Mexico. On an article page it shows authors, keywords and preprint / retraction / expression-of-concern status. It also writes a **Spanish structured summary in which every claim links to a quote verified to exist verbatim in the asjfdoijawofwdoijfdfaknjdfbv**.
+BioVidGen is an open-source (MIT), local-first tool for health-science students in Mexico. On an article page it shows authors, keywords and preprint / retraction / expression-of-concern status. It also writes a **Spanish structured summary in which every claim links to a quote verified to exist verbatim in the paper**.
 
 **Two surfaces, one local backend (ADR-0010, accepted 2026-11-05):**
 - a **Chrome MV3 extension**, which becomes a thin client: it detects the paper, reads the page and renders the results;
